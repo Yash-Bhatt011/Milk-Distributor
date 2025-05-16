@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const Customer = require('../models/Customer');
-const Order = require('../models/Order');
-const Payment = require('../models/Payment');
-const { ensureAuthenticated } = require('../middleware/auth');
+const { Customer, Order, Payment, Delivery, User } = require('../models');
+const { ensureAuthenticated, isCustomer } = require('../middleware/auth');
+
+// Remove these duplicate imports
+// const Delivery = require('../models/delivery');
+// const Delivery = require('../models/Delivery');
 
 router.get('/dashboard', async (req, res) => {
   try {
@@ -158,15 +160,40 @@ router.get('/orders/:id', async (req, res) => {
 });
 
 // Payment routes
-router.get('/payments/new', (req, res) => {
-    try {
-        res.render('customer/make-payment', {
-            pendingAmount: req.user.pendingAmount || 0
-        });
-    } catch (err) {
-        console.error('Payment Error:', err);
-        res.redirect('/customer/payments');
-    }
+router.get('/payments/new', isCustomer, async (req, res) => {
+  try {
+    // Get customer details with distributor info
+    const customer = await User.findById(req.user._id)
+      .populate('customerFields.distributorId');
+
+    // Get pending deliveries
+    const pendingDeliveries = await Delivery.find({
+      customer: req.user._id,
+      paymentStatus: 'pending'
+    }).populate('order');
+
+    // Calculate total amount due
+    const amountDue = pendingDeliveries.reduce((total, delivery) => {
+      return total + (delivery.order ? delivery.order.totalAmount : 0);
+    }, 0);
+
+    const milkQuantity = customer.customerFields?.milkQuantity || 0;
+    const ratePerLiter = customer.customerFields?.ratePerLiter || 0;
+
+    res.render('customer/make-payment', {
+      title: 'Make Payment',
+      milkQuantity,
+      ratePerLiter,
+      amountDue,
+      distributor: customer.customerFields?.distributorId,
+      pendingDeliveries,
+      csrfToken: req.csrfToken()
+    });
+  } catch (error) {
+    console.error('Error:', error);
+    req.flash('error', 'Failed to load payment details');
+    res.redirect('/customer/payments');
+  }
 });
 
 router.get('/payments/receipt/:id', async (req, res) => {
@@ -182,44 +209,52 @@ router.get('/payments/receipt/:id', async (req, res) => {
     }
 });
 
-router.post('/payments/process', async (req, res) => {
+router.post('/payments/process', isCustomer, async (req, res) => {
   try {
-    const { amount, paymentMethod } = req.body;
-    const customer = await Customer.findById(req.user._id)
-      .populate('customerFields.distributorId');
-
-    if (!customer) {
-      throw new Error('Customer not found');
-    }
-
-    const ratePerLiter = 60; // Get from settings
-    const milkQuantity = parseFloat(amount) / ratePerLiter;
-
-    const payment = new Payment({
-      customer: req.user._id,
-      distributor: customer.customerFields.distributorId,
-      amount: parseFloat(amount),
+    const {
+      distributorId,
       milkQuantity,
       ratePerLiter,
+      totalAmount,
       paymentMethod,
+    } = req.body;
+
+    if (!distributorId || !paymentMethod) {
+      throw new Error('Missing required payment information');
+    }
+
+    // Create new payment record
+    const payment = new Payment({
+      customer: req.user._id,
+      distributor: distributorId,
+      amount: parseFloat(totalAmount) || 0,
+      milkQuantity: parseFloat(milkQuantity) || 0,
+      ratePerLiter: parseFloat(ratePerLiter) || 0,
+      paymentMethod,
+      paymentDate: new Date(),
       status: 'pending'
     });
 
     await payment.save();
 
-    // Update customer's pending amount
-    customer.pendingAmount += parseFloat(amount);
-    await customer.save();
+    // Update related deliveries if any
+    if (req.body.deliveryIds) {
+      await Delivery.updateMany(
+        { _id: { $in: req.body.deliveryIds } },
+        { $set: { paymentStatus: 'paid' } }
+      );
+    }
 
-    res.json({
-      success: true,
-      message: 'Payment request received'
+    res.json({ 
+      success: true, 
+      message: 'Payment processed successfully',
+      paymentId: payment._id 
     });
-  } catch (err) {
-    console.error('Payment Error:', err);
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Payment failed'
+  } catch (error) {
+    console.error('Payment processing error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Failed to process payment. Please try again.' 
     });
   }
 });
@@ -255,6 +290,31 @@ router.post('/orders/create', async (req, res) => {
     console.error('Order creation error:', err);
     res.status(400).json({ success: false, message: err.message });
   }
+});
+
+router.get('/make-payment', isCustomer, async (req, res) => {
+    try {
+        // Fetch pending orders/deliveries for the customer
+        const pendingDeliveries = await Delivery.find({
+            customer: req.user._id,
+            paymentStatus: 'pending'
+        }).populate('order');
+
+        // Calculate total amount due
+        const amountDue = pendingDeliveries.reduce((total, delivery) => {
+            return total + (delivery.order ? delivery.order.totalAmount : 0);
+        }, 0);
+
+        res.render('customer/make-payment', {
+            title: 'Make Payment',
+            amountDue: amountDue,
+            pendingDeliveries: pendingDeliveries
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to load payment details');
+        res.redirect('/customer/dashboard');
+    }
 });
 
 module.exports = router;

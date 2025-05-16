@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const DeliverySchema = new mongoose.Schema({
+const deliverySchema = new mongoose.Schema({
     order: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Order',
@@ -35,4 +35,5 @@ const DeliverySchema = new mongoose.Schema({
     completedAt: Date
 });
 
-module.exports = mongoose.model('Delivery', DeliverySchema);
+// Export model directly
+module.exports = mongoose.model('Delivery', deliverySchema);

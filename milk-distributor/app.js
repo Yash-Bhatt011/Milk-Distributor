@@ -15,6 +15,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const setupInitialAdmin = require('./utils/setupAdmin');
 const { ErrorResponse } = require('./utils/errorResponse');
+const { Delivery } = require('./models/Delivery');
 
 // Load environment variables
 dotenv.config();

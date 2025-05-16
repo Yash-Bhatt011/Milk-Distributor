@@ -35,6 +35,10 @@ const customerSchema = new mongoose.Schema({
       type: Number,
       default: 0
     },
+    ratePerLiter: {
+      type: Number,
+      default: 0
+    },
     subscriptionPlan: {
       type: String,
       enum: ['daily', 'alternate', 'weekly'],

@@ -253,77 +253,103 @@
 
   <!-- Improved Create Delivery Modal -->
   <div class="modal fade" id="createDeliveryModal">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title">
-            <i class="fas fa-truck me-2"></i>Create New Delivery
-          </h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <form id="createDeliveryForm">
-          <div class="modal-body p-4">
-            <div class="mb-4">
-              <label class="form-label">Select Customer</label>
-              <select name="customerId" class="form-select form-select-lg" required>
-                <option value="">Choose customer...</option>
-                <% customers.forEach(customer => { %>
-                  <option value="<%= customer._id %>"><%= customer.name %></option>
-                <% }); %>
-              </select>
-            </div>
-            
-            <div class="row mb-4">
-              <div class="col-md-6 mb-3 mb-md-0">
-                <label class="form-label">Milk Type</label>
-                <select name="milkType" class="form-select" required id="milkTypeSelect">
-                  <option value="Regular Milk">Regular Milk</option>
-                  <option value="Full Cream Milk">Full Cream Milk</option>
-                  <option value="Toned Milk">Toned Milk</option>
-                  <option value="Double Toned Milk">Double Toned Milk</option>
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-truck me-2"></i>Create New Delivery
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="createDeliveryForm">
+            <div class="modal-body p-4">
+              <!-- Customer Selection -->
+              <div class="mb-4">
+                <label class="form-label required">Customer</label>
+                <select name="customerId" class="form-select form-select-lg" required>
+                  <option value="">Choose customer...</option>
+                  <% customers.forEach(customer => { %>
+                    <option value="<%= customer._id %>"><%= customer.name %></option>
+                  <% }); %>
                 </select>
               </div>
-              <div class="col-md-6">
-                <label class="form-label">Quantity (Liters)</label>
-                <div class="input-group">
-                  <input type="number" name="quantity" class="form-control" min="0.5" step="0.5" required value="1">
-                  <span class="input-group-text">L</span>
+              
+              <!-- Product Details -->
+              <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <label class="form-label required">Milk Type</label>
+                  <select name="milkType" class="form-select" required>
+                    <option value="">Select type...</option>
+                    <option value="Regular Milk">Regular Milk</option>
+                    <option value="Full Cream Milk">Full Cream Milk</option>
+                    <option value="Toned Milk">Toned Milk</option>
+                    <option value="Double Toned Milk">Double Toned Milk</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label required">Quantity (Liters)</label>
+                  <div class="input-group">
+                    <input type="number" name="quantity" class="form-control" min="0.5" step="0.5" required>
+                    <span class="input-group-text">L</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label d-block">Delivery Time</label>
-              <div class="d-flex">
-                <div class="form-check form-check-inline flex-fill">
-                  <input class="form-check-input" type="radio" name="deliveryTime" id="morningDelivery" value="morning" checked>
-                  <label class="form-check-label p-2 w-100 text-center border rounded" for="morningDelivery">
-                    <i class="fas fa-sun text-warning me-2"></i>Morning
-                  </label>
+              
+              <!-- Price Details -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <label class="form-label required">Price per Liter (₹)</label>
+                  <input type="number" name="pricePerLiter" class="form-control" value="60" required>
                 </div>
-                <div class="form-check form-check-inline flex-fill">
-                  <input class="form-check-input" type="radio" name="deliveryTime" id="eveningDelivery" value="evening">
-                  <label class="form-check-label p-2 w-100 text-center border rounded" for="eveningDelivery">
-                    <i class="fas fa-moon text-primary me-2"></i>Evening
-                  </label>
+                <div class="col-md-6">
+                  <label class="form-label">Total Amount (₹)</label>
+                  <input type="text" id="totalAmount" class="form-control" readonly>
                 </div>
               </div>
+              
+              <!-- Delivery Details -->
+              <div class="mb-4">
+                <label class="form-label required">Delivery Date</label>
+                <input type="date" name="deliveryDate" class="form-control" required 
+                       value="<%= new Date().toISOString().split('T')[0] %>">
+              </div>
+              
+              <div class="mb-4">
+                <label class="form-label required">Delivery Time</label>
+                <div class="d-flex">
+                  <div class="form-check form-check-inline flex-fill">
+                    <input class="form-check-input" type="radio" name="deliveryTime" 
+                           id="morningDelivery" value="morning" required checked>
+                    <label class="form-check-label p-2 w-100 text-center border rounded" for="morningDelivery">
+                      <i class="fas fa-sun text-warning me-2"></i>Morning
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline flex-fill">
+                    <input class="form-check-input" type="radio" name="deliveryTime" 
+                           id="eveningDelivery" value="evening" required>
+                    <label class="form-check-label p-2 w-100 text-center border rounded" for="eveningDelivery">
+                      <i class="fas fa-moon text-primary me-2"></i>Evening
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Additional Options -->
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="true" id="notifyCustomer" name="notifyCustomer">
+                <label class="form-check-label" for="notifyCustomer">
+                  Notify customer about this delivery
+                </label>
+              </div>
             </div>
-            
-            <div class="form-check mb-3">
-              <input class="form-check-input" type="checkbox" value="true" id="notifyCustomer" name="notifyCustomer">
-              <label class="form-check-label" for="notifyCustomer">
-                Notify customer about this delivery
-              </label>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Create Delivery
+              </button>
             </div>
-          </div>
-          <div class="modal-footer bg-light">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary px-4">
-              <i class="fas fa-save me-2"></i>Create Delivery
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   </div>
@@ -424,6 +450,15 @@
 }
 </style>
 
+<style>
+/* Add to existing styles */
+.required::after {
+    content: '*';
+    color: red;
+    margin-left: 4px;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Get CSRF token from meta tag
@@ -438,18 +473,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(this);
         const data = {
             customer: formData.get('customerId'),
-            distributor: '<%= user._id %>', // Get current distributor's ID
+            distributor: '<%= user._id %>',
             items: [{
                 product: formData.get('milkType'),
                 quantity: parseFloat(formData.get('quantity')),
-                price: 60
+                price: parseFloat(formData.get('pricePerLiter'))
             }],
+            totalAmount: parseFloat(formData.get('quantity')) * parseFloat(formData.get('pricePerLiter')),
             deliveryTime: formData.get('deliveryTime'),
-            deliveryDate: new Date(),
+            deliveryDate: formData.get('deliveryDate'),
+            scheduledTime: new Date(formData.get('deliveryDate')).toISOString(),
             status: 'pending',
+            paymentStatus: 'pending',
+            notifyCustomer: formData.get('notifyCustomer') === 'true',
+            order: {
+                customer: formData.get('customerId'),
+                distributor: '<%= user._id %>',
+                items: [{
+                    product: formData.get('milkType'),
+                    quantity: parseFloat(formData.get('quantity')),
+                    price: parseFloat(formData.get('pricePerLiter'))
+                }],
+                totalAmount: parseFloat(formData.get('quantity')) * parseFloat(formData.get('pricePerLiter')),
+                status: 'pending',
+                paymentStatus: 'pending',
+                deliveryTime: formData.get('deliveryTime'),
+                deliveryDate: formData.get('deliveryDate')
+            },
             _csrf: csrfToken
         };
-
+    
+        if (!data.customer || !data.items[0].product || !data.items[0].quantity || !data.deliveryTime || !data.deliveryDate) {
+            showToast('Please fill in all required fields', 'warning');
+            return;
+        }
+    
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
@@ -459,38 +517,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'CSRF-Token': csrfToken
                 },
                 body: JSON.stringify(data)
             });
-
+    
             const result = await response.json();
             
             if (!response.ok) {
                 throw new Error(result.message || 'Failed to create delivery');
             }
-
-            if (result.success) {
-                location.reload();
-            } else {
-                throw new Error(result.message);
-            }
+    
+            // Close modal and show success message
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createDeliveryModal'));
+            modal.hide();
+            showToast('Delivery created successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
         } catch (err) {
             console.error('Error:', err);
-            const alertElement = document.createElement('div');
-            alertElement.className = 'alert alert-danger alert-dismissible fade show mt-3';
-            alertElement.innerHTML = `
-                <i class="fas fa-exclamation-circle me-2"></i>
-                ${err.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            const modalBody = this.querySelector('.modal-body');
-            modalBody.insertBefore(alertElement, modalBody.firstChild);
+            showToast(err.message || 'Error creating delivery', 'danger');
         } finally {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Create Delivery';
         }
+    });
+
+    // Add this code to calculate total amount automatically
+    document.querySelector('input[name="quantity"], input[name="pricePerLiter"]').addEventListener('input', function() {
+        const quantity = parseFloat(document.querySelector('input[name="quantity"]').value) || 0;
+        const pricePerLiter = parseFloat(document.querySelector('input[name="pricePerLiter"]').value) || 0;
+        document.getElementById('totalAmount').value = (quantity * pricePerLiter).toFixed(2);
     });
 
     // Update delivery status function
@@ -547,7 +604,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const data = await response.json();
+            
+            if (!data || !data.order) {
+                throw new Error('Invalid order data received');
+            }
+
             const order = data.order;
+            const delivery = data.delivery || order.delivery || {};
+            const customer = delivery.customer || order.customer || {};
 
             document.getElementById('orderDetails').innerHTML = `
                 <div class="card border-0">
@@ -555,34 +619,56 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="row g-3">
                             <div class="col-12">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="mb-0">Order #${order._id.slice(-6)}</h6>
-                                    <span class="badge bg-${getStatusColor(order.status)}">${order.status}</span>
+                                    <h6 class="mb-0">Order #${order._id ? order._id.slice(-6) : 'N/A'}</h6>
+                                    <span class="badge bg-${getStatusColor(order.status || delivery.status)}">${order.status || delivery.status || 'pending'}</span>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="text-muted small">Customer</label>
-                                <p class="mb-0">${order.customer?.name || 'N/A'}</p>
+                                <label class="text-muted small">Customer Name</label>
+                                <p class="mb-0">${customer.name || 'N/A'}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small">Contact</label>
-                                <p class="mb-0">${order.customer?.phone || 'N/A'}</p>
+                                <p class="mb-0">${customer.phone || 'N/A'}</p>
                             </div>
                             <div class="col-12">
                                 <label class="text-muted small">Address</label>
-                                <p class="mb-0">${formatAddress(order.customer?.address)}</p>
+                                <p class="mb-0">${formatAddress(customer.address)}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small">Product</label>
-                                <p class="mb-0">${order.items[0]?.product || 'Regular Milk'}</p>
+                                <p class="mb-0">${order.items?.[0]?.product || 'Regular Milk'}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="text-muted small">Quantity</label>
-                                <p class="mb-0">${order.items[0]?.quantity || '0'} L</p>
+                                <p class="mb-0">${order.items?.[0]?.quantity || '0'} L</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Price per Liter</label>
+                                <p class="mb-0">₹${order.items?.[0]?.price?.toFixed(2) || '0.00'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Total Amount</label>
+                                <p class="mb-0">₹${((order.items?.[0]?.quantity || 0) * (order.items?.[0]?.price || 0)).toFixed(2)}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Delivery Time</label>
+                                <p class="mb-0 text-capitalize">${delivery.deliveryTime || order.deliveryTime || 'Not specified'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Scheduled For</label>
+                                <p class="mb-0">${delivery.scheduledTime ? new Date(delivery.scheduledTime).toLocaleString() : 'Not scheduled'}</p>
                             </div>
                             <div class="col-12">
                                 <label class="text-muted small">Notes</label>
-                                <p class="mb-0">${order.notes || 'No notes'}</p>
+                                <p class="mb-0">${delivery.notes || order.notes || 'No notes'}</p>
                             </div>
+                            ${(delivery.status === 'failed' || order.status === 'failed') ? `
+                                <div class="col-12">
+                                    <label class="text-muted small">Failure Reason</label>
+                                    <p class="mb-0 text-danger">${delivery.failureReason || order.failureReason || 'No reason provided'}</p>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -592,7 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.show();
         } catch (err) {
             console.error('Error:', err);
-            showToast('Error loading order details', 'danger');
+            showToast(err.message || 'Error loading order details', 'danger');
         }
     };
 

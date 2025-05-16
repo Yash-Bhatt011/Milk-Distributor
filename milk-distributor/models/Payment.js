@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const PaymentSchema = new mongoose.Schema({
   customer: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Customer',
+    ref: 'User',
     required: true
   },
   distributor: {
@@ -25,8 +25,8 @@ const PaymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    required: true,
-    enum: ['cash', 'upi', 'card']
+    enum: ['cash', 'upi', 'card'],
+    required: true
   },
   status: {
     type: String,
@@ -36,17 +36,7 @@ const PaymentSchema = new mongoose.Schema({
   paymentDate: {
     type: Date,
     default: Date.now
-  },
-  confirmationDate: Date,
-  confirmationNote: String
-}, { timestamps: true });
-
-// Calculate total amount before saving
-PaymentSchema.pre('save', function(next) {
-  if (!this.amount) {
-    this.amount = this.milkQuantity * this.ratePerLiter;
   }
-  next();
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('Payment', PaymentSchema);
