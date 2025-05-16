@@ -1,0 +1,96 @@
+<div class="container py-4">
+  <div class="card border-0 shadow mb-4">
+    <div class="card-header bg-white p-4 border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Revenue Overview</h4>
+        <div class="d-flex gap-2">
+          <input type="date" id="startDate" class="form-control">
+          <input type="date" id="endDate" class="form-control">
+          <button onclick="filterRevenue()" class="btn btn-primary">Filter</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card-body p-4">
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="border rounded p-3">
+            <h6 class="text-muted mb-2">Today's Collection</h6>
+            <h3 class="mb-0">₹<%= todayRevenue %></h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="border rounded p-3">
+            <h6 class="text-muted mb-2">This Month</h6>
+            <h3 class="mb-0">₹<%= monthlyRevenue %></h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="border rounded p-3">
+            <h6 class="text-muted mb-2">Total Revenue</h6>
+            <h3 class="mb-0">₹<%= totalRevenue %></h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="border rounded p-3">
+            <h6 class="text-muted mb-2">Pending Amount</h6>
+            <h3 class="mb-0">₹<%= pendingAmount %></h3>
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-responsive mt-4">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% payments.forEach(payment => { %>
+              <tr>
+                <td><%= new Date(payment.paymentDate).toLocaleDateString() %></td>
+                <td><%= payment.customer?.name || 'N/A' %></td>
+                <td>₹<%= payment.amount %></td>
+                <td><%= payment.paymentMethod %></td>
+                <td>
+                  <span class="badge bg-<%= payment.status === 'completed' ? 'success' : 'warning' %>">
+                    <%= payment.status %>
+                  </span>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterRevenue() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  
+  if (!startDate || !endDate) {
+    alert('Please select both dates');
+    return;
+  }
+  
+  window.location.href = `/distributor/revenue?startDate=${startDate}&endDate=${endDate}`;
+}
+
+// Set initial dates
+document.addEventListener('DOMContentLoaded', () => {
+  const today = new Date();
+  const monthAgo = new Date();
+  monthAgo.setMonth(monthAgo.getMonth() - 1);
+  
+  document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
+  document.getElementById('endDate').value = today.toISOString().split('T')[0];
+});
+</script>

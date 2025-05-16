@@ -1,0 +1,48 @@
+<!-- filepath: d:\Milkwala-App11\milk-distributor\views\partials\navbar.ejs -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <i class="fas fa-milk-carton me-2"></i>
+      MilkMaster
+    </a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <% if (user) { %>
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/<%= user.role %>/dashboard">Dashboard</a>
+          </li>
+          <% if (user.role === 'distributor') { %>
+            <li class="nav-item">
+              <a class="nav-link" href="/distributor/deliveries">Deliveries</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/distributor/customers">Customers</a>
+            </li>
+          <% } %>
+        </ul>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+               data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-user me-2"></i><%= user.name %>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="/logout">Logout</a></li>
+            </ul>
+          </li>
+        </ul>
+      <% } else { %>
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="/login">Login</a>
+          </li>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+</nav>

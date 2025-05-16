@@ -1,0 +1,111 @@
+<div class="container py-4">
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Edit Customer</h4>
+    </div>
+    <div class="card-body p-4">
+      <form id="editCustomerForm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <!-- Use the same form fields as in your add customer form -->
+        <div class="row g-3">
+          <!-- Basic Info -->
+          <div class="col-md-6">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" value="<%= customer.name %>" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" class="form-control" value="<%= customer.phone %>" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="<%= customer.email %>" required>
+          </div>
+
+          <!-- Subscription Details -->
+          <div class="col-md-4">
+            <label class="form-label">Subscription Plan</label>
+            <select name="subscriptionPlan" class="form-select" required>
+              <option value="daily" <%= customer.customerFields.subscriptionPlan === 'daily' ? 'selected' : '' %>>Daily</option>
+              <option value="alternate" <%= customer.customerFields.subscriptionPlan === 'alternate' ? 'selected' : '' %>>Alternate Days</option>
+              <option value="weekly" <%= customer.customerFields.subscriptionPlan === 'weekly' ? 'selected' : '' %>>Weekly</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Milk Quantity (L)</label>
+            <input type="number" name="milkQuantity" class="form-control" value="<%= customer.customerFields.milkQuantity %>" min="0.5" step="0.5" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Delivery Time</label>
+            <select name="deliveryTime" class="form-select" required>
+              <option value="morning" <%= customer.customerFields.deliveryTime === 'morning' ? 'selected' : '' %>>Morning</option>
+              <option value="evening" <%= customer.customerFields.deliveryTime === 'evening' ? 'selected' : '' %>>Evening</option>
+            </select>
+          </div>
+
+          <!-- Address -->
+          <div class="col-12">
+            <label class="form-label">Street Address</label>
+            <input type="text" name="street" class="form-control" value="<%= customer.address.street %>" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" value="<%= customer.address.city %>" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">State</label>
+            <input type="text" name="state" class="form-control" value="<%= customer.address.state %>" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">ZIP Code</label>
+            <input type="text" name="zipCode" class="form-control" value="<%= customer.address.zipCode %>" required>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <a href="/distributor/customers" class="btn btn-outline-secondary ms-2">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    
+    try {
+        const formData = new FormData(form);
+        const response = await fetch(window.location.pathname, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': '<%= csrfToken %>'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to update customer');
+        }
+
+        if (data.success) {
+            window.location.href = '/distributor/customers';
+        } else {
+            throw new Error(data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || 'Failed to update customer');
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+</script>

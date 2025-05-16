@@ -1,0 +1,227 @@
+<div class="container">
+    <h1 class="mb-4">Customer Management</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact Info</th>
+                            <th>Distributor</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (customers && customers.length > 0) { %>
+                            <% customers.forEach(customer => { %>
+                                <tr>
+                                    <td><%= customer.name %></td>
+                                    <td>
+                                        <%= customer.phone %><br>
+                                        <small><%= customer.email %></small>
+                                    </td>
+                                    <td><%= customer.customerFields.distributorId?.name || 'Not Assigned' %></td>
+                                    <td><%= customer.customerFields.milkQuantity %>L <%= customer.customerFields.subscriptionPlan %></td>
+                                    <td>
+                                        <span class="badge bg-<%= customer.customerFields.active ? 'success' : 'danger' %>">
+                                            <%= customer.customerFields.active ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info" onclick="viewCustomer('<%= customer._id %>')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary" onclick="editCustomer('<%= customer._id %>')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr><td colspan="6" class="text-center">No customers found</td></tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Customer Modal -->
+    <div class="modal fade" id="viewCustomerModal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Customer Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="customerDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Customer Modal -->
+    <div class="modal fade" id="editCustomerModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Customer</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editCustomerForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="editCustomerId">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" class="form-control" id="editPhone" name="phone" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="editStatus" name="active">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Subscription Plan</label>
+                            <select class="form-select" id="editPlan" name="subscriptionPlan">
+                                <option value="daily">Daily</option>
+                                <option value="alternate">Alternate Days</option>
+                                <option value="weekly">Weekly</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Milk Quantity (L)</label>
+                            <input type="number" class="form-control" id="editQuantity" name="milkQuantity" min="0.5" step="0.5">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function viewCustomer(id) {
+    try {
+        const response = await fetch(`/admin/customers/${id}`);
+        const customer = await response.json();
+        
+        const detailsHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Personal Information</h6>
+                    <p><strong>Name:</strong> ${customer.name}</p>
+                    <p><strong>Email:</strong> ${customer.email}</p>
+                    <p><strong>Phone:</strong> ${customer.phone}</p>
+                    <p><strong>Address:</strong><br>
+                        ${customer.address.street}<br>
+                        ${customer.address.city}, ${customer.address.state}<br>
+                        ${customer.address.zipCode}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Subscription Details</h6>
+                    <p><strong>Plan:</strong> ${customer.customerFields.subscriptionPlan}</p>
+                    <p><strong>Quantity:</strong> ${customer.customerFields.milkQuantity}L</p>
+                    <p><strong>Delivery Time:</strong> ${customer.customerFields.deliveryTime}</p>
+                    <p><strong>Status:</strong> ${customer.customerFields.active ? 'Active' : 'Inactive'}</p>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('customerDetailsContent').innerHTML = detailsHTML;
+        new bootstrap.Modal(document.getElementById('viewCustomerModal')).show();
+    } catch (err) {
+        console.error('Error:', err);
+        showToast('danger', 'Error loading customer details');
+    }
+}
+
+async function editCustomer(id) {
+    try {
+        const response = await fetch(`/admin/customers/${id}`);
+        const customer = await response.json();
+        
+        // Populate form fields
+        document.getElementById('editCustomerId').value = customer._id;
+        document.getElementById('editName').value = customer.name;
+        document.getElementById('editPhone').value = customer.phone;
+        document.getElementById('editStatus').value = customer.customerFields.active.toString();
+        document.getElementById('editPlan').value = customer.customerFields.subscriptionPlan;
+        document.getElementById('editQuantity').value = customer.customerFields.milkQuantity;
+        
+        new bootstrap.Modal(document.getElementById('editCustomerModal')).show();
+    } catch (err) {
+        console.error('Error:', err);
+        showToast('danger', 'Error loading customer data');
+    }
+}
+
+document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('editCustomerId').value;
+    const formData = new FormData(this);
+    
+    const data = {
+        name: formData.get('name'),
+        phone: formData.get('phone'),
+        customerFields: {
+            active: formData.get('active') === 'true',
+            subscriptionPlan: formData.get('subscriptionPlan'),
+            milkQuantity: parseFloat(formData.get('milkQuantity'))
+        }
+    };
+
+    try {
+        console.log('Sending data:', data);
+        const response = await fetch(`/admin/customers/${id}`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify(data)
+        });
+
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const responseData = await response.text();
+        console.log('Raw response:', responseData);
+        
+        let result;
+        try {
+            result = JSON.parse(responseData);
+        } catch (e) {
+            console.error('Failed to parse response as JSON:', responseData);
+            throw new Error(`Server returned invalid JSON: ${responseData.substring(0, 100)}...`);
+        }
+
+        if (!response.ok) {
+            throw new Error(result.message || result.error || `Server error: ${response.status}`);
+        }
+
+        showToast('success', 'Customer updated successfully');
+        window.location.reload();
+    } catch (err) {
+        console.error('Error details:', err);
+        showToast('danger', `Update failed: ${err.message}`);
+    }
+});
+</script>

@@ -1,0 +1,77 @@
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-5">
+    <div class="card shadow-lg border-0 rounded-lg mt-5">
+      <div class="card-header bg-primary text-white text-center">
+        <h3 class="my-2">
+          <% if (role === 'admin') { %>
+            <i class="fas fa-user-shield me-2"></i>
+          <% } else if (role === 'distributor') { %>
+            <i class="fas fa-truck me-2"></i>
+          <% } else if (role === 'customer') { %>
+            <i class="fas fa-users me-2"></i>
+          <% } %>
+          <%= role.charAt(0).toUpperCase() + role.slice(1) %> Login
+        </h3>
+      </div>
+      
+      <div class="card-body">
+        <form action="/login/<%= role %>" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-envelope"></i>
+              </span>
+              <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="fas fa-lock"></i>
+              </span>
+              <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
+              <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-sign-in-alt me-2"></i>
+              Login
+            </button>
+          </div>
+          
+          <div class="text-center mt-4">
+            <a href="/login" class="text-decoration-none">
+              <i class="fas fa-arrow-left me-1"></i>
+              Back to role selection
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('togglePassword').addEventListener('click', function () {
+    const passwordInput = document.getElementById('password');
+    const icon = this.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    } else {
+      passwordInput.type = 'password';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    }
+  });
+</script>

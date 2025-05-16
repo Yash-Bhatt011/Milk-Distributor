@@ -1,0 +1,76 @@
+<div class="container">
+  <% if (typeof customer === 'undefined' || !customer) { %>
+    <div class="alert alert-danger">
+      Customer data not available
+    </div>
+  <% } else { %>
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title mb-4">My Profile</h5>
+        
+        <div class="row g-4">
+          <!-- Personal Information -->
+          <div class="col-md-6">
+            <div class="mb-4">
+              <h6>Personal Information</h6>
+              <p class="mb-2"><strong>Name:</strong> <%= customer.name || 'N/A' %></p>
+              <p class="mb-2"><strong>Email:</strong> <%= customer.email || 'N/A' %></p>
+              <p class="mb-2"><strong>Phone:</strong> <%= customer.phone || 'N/A' %></p>
+            </div>
+
+            <div class="mb-4">
+              <h6>Address</h6>
+              <% if (customer.address) { %>
+                <p class="mb-1"><%= customer.address.street || 'No street address' %></p>
+                <p class="mb-1">
+                  <%= customer.address.city || '' %> 
+                  <%= customer.address.state || '' %> 
+                  <%= customer.address.zipCode || '' %>
+                </p>
+              <% } else { %>
+                <p>No address provided</p>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Subscription Information -->
+          <div class="col-md-6">
+            <div class="mb-4">
+              <h6>Subscription Details</h6>
+              <% if (customer.customerFields) { %>
+                <p class="mb-2">
+                  <strong>Daily Quantity:</strong> <%= customer.customerFields.milkQuantity || 0 %> L
+                </p>
+                <p class="mb-2">
+                  <strong>Delivery Time:</strong> <%= customer.customerFields.deliveryTime || 'Not set' %>
+                </p>
+                <p class="mb-2">
+                  <strong>Status:</strong> 
+                  <span class="badge bg-<%= customer.customerFields.active ? 'success' : 'danger' %>">
+                    <%= customer.customerFields.active ? 'Active' : 'Inactive' %>
+                  </span>
+                </p>
+              <% } else { %>
+                <p>No subscription details available</p>
+              <% } %>
+            </div>
+
+            <div class="mb-4">
+              <h6>Distributor Information</h6>
+              <% if (customer.customerFields?.distributorId) { %>
+                <p class="mb-2">
+                  <strong>Name:</strong> <%= customer.customerFields.distributorId.name %>
+                </p>
+                <p class="mb-2">
+                  <strong>Phone:</strong> <%= customer.customerFields.distributorId.phone %>
+                </p>
+              <% } else { %>
+                <p>No distributor assigned</p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>

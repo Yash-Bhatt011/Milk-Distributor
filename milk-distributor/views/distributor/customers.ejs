@@ -1,0 +1,597 @@
+<div class="container py-4">
+  <!-- Page Header -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="fw-bold text-primary mb-1">My Customers</h1>
+          <p class="text-muted mb-0">Manage your customer database</p>
+        </div>
+        <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+          <i class="fas fa-plus me-2"></i>Add Customer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtering and Search -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0">
+              <i class="fas fa-search text-muted"></i>
+            </span>
+            <input type="text" id="customerSearch" class="form-control border-start-0" placeholder="Search customers...">
+          </div>
+        </div>
+        <div class="col-md-3">
+          <select id="planFilter" class="form-select">
+            <option value="">All Plans</option>
+            <option value="daily">Daily</option>
+            <option value="alternate">Alternate Days</option>
+            <option value="weekly">Weekly</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select id="statusFilter" class="form-select">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-primary w-100" id="resetFilters">
+            <i class="fas fa-sync-alt me-2"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Cards for Mobile View -->
+  <div class="d-md-none">
+    <% if (customers && customers.length > 0) { %>
+      <% customers.forEach(customer => { %>
+        <div class="card border-0 shadow-sm customer-card mb-3">
+          <div class="card-body p-0">
+            <div class="d-flex border-bottom p-3">
+              <div class="avatar-circle bg-primary text-white me-3">
+                <%= customer.name.charAt(0).toUpperCase() %>
+              </div>
+              <div>
+                <h5 class="mb-0 fw-bold"><%= customer.name %></h5>
+                <div class="text-muted small">
+                  <i class="fas fa-phone me-1"></i> <%= customer.phone %>
+                </div>
+              </div>
+              <div class="ms-auto">
+                <span class="badge bg-<%= customer.customerFields.active ? 'success' : 'danger' %> rounded-pill">
+                  <%= customer.customerFields.active ? 'Active' : 'Inactive' %>
+                </span>
+              </div>
+            </div>
+            <div class="p-3">
+              <div class="mb-2">
+                <div class="text-muted small mb-1">Address</div>
+                <div><i class="fas fa-map-marker-alt me-1 text-primary"></i> <%= customer.address.street %>, <%= customer.address.city %></div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-6">
+                  <div class="text-muted small mb-1">Plan</div>
+                  <div><i class="fas fa-calendar-alt me-1 text-primary"></i> <%= customer.customerFields.subscriptionPlan %></div>
+                </div>
+                <div class="col-6">
+                  <div class="text-muted small mb-1">Quantity</div>
+                  <div><i class="fas fa-tint me-1 text-primary"></i> <%= customer.customerFields.milkQuantity %> L</div>
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-3">
+                <button class="btn btn-outline-info btn-sm w-100 me-2" onclick="viewCustomer('<%= customer._id %>')">
+                  <i class="fas fa-eye me-1"></i> View
+                </button>
+                <button class="btn btn-outline-warning btn-sm w-100 me-2" onclick="editCustomer('<%= customer._id %>')">
+                  <i class="fas fa-edit me-1"></i> Edit
+                </button>
+                <button class="btn btn-outline-<%= customer.customerFields.active ? 'danger' : 'success' %> btn-sm w-100" onclick="toggleCustomerStatus('<%= customer._id %>')">
+                  <i class="fas fa-power-off me-1"></i> <%= customer.customerFields.active ? 'Deactivate' : 'Activate' %>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+          <div class="mb-4">
+            <i class="fas fa-users text-muted" style="font-size: 4rem;"></i>
+          </div>
+          <h3 class="text-muted">No Customers Found</h3>
+          <p class="text-muted mb-4">You haven't added any customers yet.</p>
+          <button class="btn btn-primary px-4 py-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <i class="fas fa-plus me-2"></i>Add Your First Customer
+          </button>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Customers Table for Desktop View -->
+  <div class="d-none d-md-block">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="bg-light">
+              <tr>
+                <th class="ps-4">Name</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Plan</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th class="text-end pe-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (customers && customers.length > 0) { %>
+                <% customers.forEach(customer => { %>
+                  <tr class="customer-row">
+                    <td class="ps-4">
+                      <div class="d-flex align-items-center">
+                        <div class="avatar-circle bg-primary text-white me-3">
+                          <%= customer.name.charAt(0).toUpperCase() %>
+                        </div>
+                        <div>
+                          <div class="fw-bold"><%= customer.name %></div>
+                          <div class="small text-muted">ID: #<%= customer._id.toString().slice(-6) %></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><i class="fas fa-phone me-1 text-muted"></i> <%= customer.phone %></td>
+                    <td>
+                      <div class="text-truncate" style="max-width: 200px;">
+                        <i class="fas fa-map-marker-alt me-1 text-muted"></i>
+                        <%= customer.address.street %>, <%= customer.address.city %>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="badge rounded-pill bg-light text-dark border">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        <%= customer.customerFields.subscriptionPlan %>
+                      </span>
+                    </td>
+                    <td>
+                      <i class="fas fa-tint me-1 text-primary"></i>
+                      <%= customer.customerFields.milkQuantity %> L
+                    </td>
+                    <td>
+                      <span class="badge rounded-pill py-2 px-3 bg-<%= customer.customerFields.active ? 'success' : 'danger' %>">
+                        <i class="fas fa-<%= customer.customerFields.active ? 'check-circle' : 'times-circle' %> me-1"></i>
+                        <%= customer.customerFields.active ? 'Active' : 'Inactive' %>
+                      </span>
+                    </td>
+                    <td class="text-end pe-4">
+                      <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-info" onclick="viewCustomer('<%= customer._id %>')">
+                          <i class="fas fa-eye me-1"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editCustomer('<%= customer._id %>')">
+                          <i class="fas fa-edit me-1"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline-<%= customer.customerFields.active ? 'danger' : 'success' %>" onclick="toggleCustomerStatus('<%= customer._id %>')">
+                          <i class="fas fa-power-off me-1"></i> <%= customer.customerFields.active ? 'Deactivate' : 'Activate' %>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="7" class="text-center py-5">
+                    <div class="empty-state">
+                      <i class="fas fa-users text-muted mb-3" style="font-size: 3rem;"></i>
+                      <h5>No Customers Found</h5>
+                      <p class="text-muted">You haven't added any customers yet.</p>
+                      <button class="btn btn-primary px-4 py-2 mt-2" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+                        <i class="fas fa-plus me-2"></i>Add Your First Customer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Customer Modal -->
+  <div class="modal fade" id="addCustomerModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-user-plus me-2"></i> Add New Customer
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form action="/distributor/customers/new" method="POST" id="addCustomerForm">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="modal-body p-4">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-user text-muted"></i>
+                  </span>
+                  <input type="text" name="name" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Phone</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-phone text-muted"></i>
+                  </span>
+                  <input type="tel" name="phone" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-envelope text-muted"></i>
+                  </span>
+                  <input type="email" name="email" class="form-control" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light">
+                    <i class="fas fa-lock text-muted"></i>
+                  </span>
+                  <input type="password" name="password" class="form-control" required>
+                </div>
+              </div>
+
+              <div class="col-12">
+                <hr class="text-muted">
+                <h6 class="mb-3">Subscription Details</h6>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label">Subscription Plan</label>
+                <select name="subscriptionPlan" class="form-select" required>
+                  <option value="daily">Daily</option>
+                  <option value="alternate">Alternate Days</option>
+                  <option value="weekly">Weekly</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Milk Quantity (L)</label>
+                <input type="number" name="milkQuantity" class="form-control" min="0.5" step="0.5" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Delivery Time</label>
+                <select name="deliveryTime" class="form-select" required>
+                  <option value="morning">Morning</option>
+                  <option value="evening">Evening</option>
+                </select>
+              </div>
+
+              <div class="col-12">
+                <hr class="text-muted">
+                <h6 class="mb-3">Address Details</h6>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Street Address</label>
+                <input type="text" name="street" class="form-control" placeholder="Street" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">City</label>
+                <input type="text" name="city" class="form-control" placeholder="City" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">State</label>
+                <input type="text" name="state" class="form-control" placeholder="State" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">ZIP Code</label>
+                <input type="text" name="zipCode" class="form-control" placeholder="ZIP Code" required>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus me-1"></i> Add Customer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Customer Modal -->
+  <div class="modal fade" id="viewCustomerModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-user me-2"></i> Customer Details
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="viewCustomerContent">
+          <!-- Content will be populated dynamically -->
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-warning" id="viewEditBtn">
+            <i class="fas fa-edit me-1"></i> Edit Customer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .avatar-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-weight: bold;
+  }
+  
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .customer-card {
+    transition: transform 0.2s ease;
+  }
+  
+  .customer-card:hover {
+    transform: translateY(-3px);
+  }
+  
+  .customer-row {
+    transition: background-color 0.2s ease;
+  }
+  
+  .customer-row:hover {
+    background-color: rgba(0, 123, 255, 0.03);
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const addCustomerForm = document.getElementById('addCustomerForm');
+  if (addCustomerForm) {
+    addCustomerForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      try {
+        const formData = new FormData(this);
+        const data = {
+          name: formData.get('name'),
+          email: formData.get('email'),
+          password: formData.get('password'),
+          phone: formData.get('phone'),
+          role: 'customer',
+          address: {
+            street: formData.get('street'),
+            city: formData.get('city'),
+            state: formData.get('state'),
+            zipCode: formData.get('zipCode')
+          },
+          customerFields: {
+            subscriptionPlan: formData.get('subscriptionPlan'),
+            milkQuantity: parseFloat(formData.get('milkQuantity')),
+            deliveryTime: formData.get('deliveryTime'),
+            active: true
+          }
+        };
+
+        const response = await fetch('/distributor/customers/new', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to add customer');
+        }
+
+        if (result.success) {
+          location.reload();
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || 'Failed to add customer. Please try again.');
+      }
+    });
+  }
+  
+  const searchInput = document.getElementById('customerSearch');
+  const planFilter = document.getElementById('planFilter');
+  const statusFilter = document.getElementById('statusFilter');
+  const resetBtn = document.getElementById('resetFilters');
+  
+  function filterCustomers() {
+    const searchValue = searchInput.value.toLowerCase();
+    const planValue = planFilter.value.toLowerCase();
+    const statusValue = statusFilter.value.toLowerCase();
+    
+    // Mobile cards
+    const customerCards = document.querySelectorAll('.customer-card');
+    customerCards.forEach(card => {
+      const name = card.querySelector('h5').textContent.toLowerCase();
+      const plan = card.querySelector('[class*="fa-calendar"]').parentElement.textContent.toLowerCase();
+      const status = card.querySelector('.badge').textContent.toLowerCase();
+      
+      const matchesSearch = !searchValue || name.includes(searchValue);
+      const matchesPlan = !planValue || plan.includes(planValue);
+      const matchesStatus = !statusValue || status.includes(statusValue);
+      
+      card.style.display = (matchesSearch && matchesPlan && matchesStatus) ? '' : 'none';
+    });
+    
+    // Table rows
+    const customerRows = document.querySelectorAll('.customer-row');
+    customerRows.forEach(row => {
+      const name = row.querySelector('.fw-bold').textContent.toLowerCase();
+      const plan = row.querySelector('.badge.rounded-pill.bg-light').textContent.toLowerCase();
+      const status = row.querySelector('.badge:not(.bg-light)').textContent.toLowerCase();
+      
+      const matchesSearch = !searchValue || name.includes(searchValue);
+      const matchesPlan = !planValue || plan.includes(planValue);
+      const matchesStatus = !statusValue || status.includes(statusValue);
+      
+      row.style.display = (matchesSearch && matchesPlan && matchesStatus) ? '' : 'none';
+    });
+  }
+  
+  if (searchInput) searchInput.addEventListener('input', filterCustomers);
+  if (planFilter) planFilter.addEventListener('change', filterCustomers);
+  if (statusFilter) statusFilter.addEventListener('change', filterCustomers);
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    planFilter.value = '';
+    statusFilter.value = '';
+    filterCustomers();
+  });
+});
+
+const csrfToken = '<%= csrfToken %>';
+
+function viewCustomer(id) {
+  fetch(`/distributor/customers/${id}`, {
+    headers: {
+      'CSRF-Token': csrfToken
+    }
+  })
+  .then(res => res.json())
+  .then(customer => {
+    if (!customer) throw new Error('Customer not found');
+    
+    const content = `
+      <div class="text-center mb-4">
+        <div class="avatar-circle bg-info text-white mx-auto" style="width: 64px; height: 64px; font-size: 1.5rem;">
+          ${customer.name.charAt(0).toUpperCase()}
+        </div>
+        <h4 class="mt-3 mb-0">${customer.name}</h4>
+        <p class="text-muted">Customer ID: #${customer._id.slice(-6)}</p>
+        <span class="badge rounded-pill py-2 px-3 bg-${customer.customerFields.active ? 'success' : 'danger'}">
+          ${customer.customerFields.active ? 'Active' : 'Inactive'}
+        </span>
+      </div>
+      
+      <div class="row g-3 mb-3">
+        <div class="col-sm-6">
+          <div class="border rounded p-3 h-100">
+            <h6 class="text-muted mb-2">Contact Details</h6>
+            <p class="mb-1">
+              <i class="fas fa-phone me-2 text-primary"></i> ${customer.phone}
+            </p>
+            <p class="mb-0">
+              <i class="fas fa-envelope me-2 text-primary"></i> ${customer.email || 'N/A'}
+            </p>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="border rounded p-3 h-100">
+            <h6 class="text-muted mb-2">Subscription Details</h6>
+            <p class="mb-1">
+              <i class="fas fa-calendar-alt me-2 text-primary"></i> ${customer.customerFields.subscriptionPlan}
+            </p>
+            <p class="mb-1">
+              <i class="fas fa-tint me-2 text-primary"></i> ${customer.customerFields.milkQuantity} L
+            </p>
+            <p class="mb-0">
+              <i class="fas fa-clock me-2 text-primary"></i> ${customer.customerFields.deliveryTime}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border rounded p-3">
+        <h6 class="text-muted mb-2">Address</h6>
+        <p class="mb-1">
+          <i class="fas fa-map-marker-alt me-2 text-primary"></i> ${customer.address.street}
+        </p>
+        <p class="mb-0 text-muted">
+          ${customer.address.city}, ${customer.address.state} ${customer.address.zipCode}
+        </p>
+      </div>
+    `;
+    
+    document.getElementById('viewCustomerContent').innerHTML = content;
+    
+    const viewEditBtn = document.getElementById('viewEditBtn');
+    viewEditBtn.onclick = () => {
+      const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewCustomerModal'));
+      viewModal.hide();
+      editCustomer(customer._id);
+    };
+    
+    const viewModal = new bootstrap.Modal(document.getElementById('viewCustomerModal'));
+    viewModal.show();
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Failed to load customer details');
+  });
+}
+
+function editCustomer(id) {
+  // Direct navigation to edit page
+  window.location.href = `/distributor/customers/${id}/edit`;
+}
+
+function toggleCustomerStatus(id) {
+  if (!confirm('Are you sure you want to change this customer\'s status?')) return;
+
+  fetch(`/distributor/customers/${id}/toggle-status`, {
+    method: 'POST',  // Changed from PUT to POST
+    headers: {
+      'Content-Type': 'application/json',
+      'CSRF-Token': '<%= csrfToken %>'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      window.location.reload();
+    } else {
+      throw new Error(data.message || 'Failed to update status');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Failed to update customer status. Please try again.');
+  });
+}
+</script>

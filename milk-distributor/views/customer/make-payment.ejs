@@ -1,0 +1,114 @@
+<!-- /d:/Milkwala-App11/milk-distributor/views/customer/make-payment.ejs -->
+<%- include('../partials/header') %>
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">Make Payment</h4>
+        </div>
+        <div class="card-body p-4">
+          <form id="paymentForm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            
+            <div class="row g-3">
+              <!-- Payment Details -->
+              <div class="col-md-6">
+                <label class="form-label">Amount Due</label>
+                <input type="text" class="form-control" value="₹<%= amountDue %>" readonly>
+              </div>
+              
+              <div class="col-md-6">
+                <label class="form-label">Payment Method</label>
+                <select name="paymentMethod" class="form-select" required>
+                  <option value="">Select Payment Method</option>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="card">Card</option>
+                </select>
+              </div>
+              
+              <!-- UPI/Card Fields (hidden by default) -->
+              <div id="upiFields" class="col-12" style="display: none;">
+                <div class="mb-3">
+                  <label class="form-label">UPI ID</label>
+                  <input type="text" name="upiId" class="form-control" placeholder="yourname@upi">
+                </div>
+              </div>
+              
+              <div id="cardFields" class="col-12" style="display: none;">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Card Number</label>
+                    <input type="text" name="cardNumber" class="form-control" placeholder="1234 5678 9012 3456">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Expiry</label>
+                    <input type="text" name="cardExpiry" class="form-control" placeholder="MM/YY">
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">CVV</label>
+                    <input type="text" name="cardCvv" class="form-control" placeholder="123">
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary w-100">Submit Payment</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Show/hide payment method specific fields
+  document.querySelector('select[name="paymentMethod"]').addEventListener('change', function() {
+    const method = this.value;
+    document.getElementById('upiFields').style.display = method === 'upi' ? 'block' : 'none';
+    document.getElementById('cardFields').style.display = method === 'card' ? 'block' : 'none';
+  });
+
+  // Handle form submission
+  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const form = this;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+    
+    try {
+      const formData = new FormData(form);
+      const response = await fetch('/customer/make-payment', {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Payment failed');
+      }
+      
+      if (data.success) {
+        alert('Payment successful!');
+        window.location.href = '/customer/payments';
+      } else {
+        throw new Error(data.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert(error.message);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Payment';
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>
