@@ -1,0 +1,273 @@
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white py-3">
+          <h4 class="mb-0"><i class="fas fa-money-bill me-2"></i>Make Payment</h4>
+        </div>
+        <div class="card-body p-4">
+          <!-- Payment Summary -->
+          <div class="alert alert-info mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1">Total Amount Due</h5>
+                <p class="mb-0 text-muted">
+                  Milk Quantity: <%= typeof milkQuantity !== 'undefined' ? milkQuantity : 0 %> L @ ₹<%= typeof ratePerLiter !== 'undefined' ? ratePerLiter : 0 %>/L
+                </p>
+                <p class="mb-0 text-muted">
+                  Distributor: <%= distributor?.name || 'Not Assigned' %>
+                </p>
+              </div>
+              <div class="text-end">
+                <h3 class="mb-0">₹<%= typeof amountDue !== 'undefined' ? amountDue.toFixed(2) : '0.00' %></h3>
+                <small class="text-muted">Suggested Amount</small>
+              </div>
+            </div>
+          </div>
+
+          <form id="paymentForm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="distributorId" value="<%= distributor?._id %>">
+            <input type="hidden" name="milkQuantity" value="<%= milkQuantity %>">
+            <input type="hidden" name="ratePerLiter" value="<%= ratePerLiter %>">
+            
+            <!-- Move Manual Amount Input inside form -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Payment Amount</label>
+              <div class="input-group">
+                <span class="input-group-text">₹</span>
+                <input type="number" 
+                       name="manualAmount" 
+                       id="manualAmount"
+                       class="form-control" 
+                       value="<%= typeof amountDue !== 'undefined' ? amountDue : 0 %>"
+                       step="0.01"
+                       min="0"
+                       required>
+              </div>
+              <div class="form-text">You can modify the amount if needed</div>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="mb-4">
+              <label class="form-label fw-bold">Payment Method</label>
+              <div class="row g-3">
+                <div class="col-md-4">
+                  <div class="form-check payment-method-card">
+                    <input class="form-check-input" type="radio" name="paymentMethod" value="cash" id="cashPayment" required>
+                    <label class="form-check-label" for="cashPayment">
+                      <i class="fas fa-money-bill-wave text-success me-2"></i>Cash
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check payment-method-card">
+                    <input class="form-check-input" type="radio" name="paymentMethod" value="upi" id="upiPayment">
+                    <label class="form-check-label" for="upiPayment">
+                      <i class="fas fa-mobile-alt text-primary me-2"></i>UPI
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check payment-method-card">
+                    <input class="form-check-input" type="radio" name="paymentMethod" value="card" id="cardPayment">
+                    <label class="form-check-label" for="cardPayment">
+                      <i class="fas fa-credit-card text-info me-2"></i>Card
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- UPI Fields -->
+            <div id="upiFields" class="payment-details mb-4" style="display: none;">
+              <h5 class="mb-3">UPI Details</h5>
+              <div class="mb-3">
+                <label class="form-label">UPI ID</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-at"></i></span>
+                  <input type="text" name="upiId" class="form-control" placeholder="yourname@upi">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Card Fields -->
+            <div id="cardFields" class="payment-details mb-4" style="display: none;">
+              <h5 class="mb-3">Card Details</h5>
+              <div class="row g-3">
+                <div class="col-12">
+                  <label class="form-label">Card Number</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                    <input type="text" name="cardNumber" class="form-control" placeholder="1234 5678 9012 3456">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Expiry Date</label>
+                  <input type="text" name="cardExpiry" class="form-control" placeholder="MM/YY">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">CVV</label>
+                  <input type="password" name="cardCvv" class="form-control" placeholder="123" maxlength="3">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-lock me-2"></i>Process Payment
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Cancel</button>
+            </div>
+          </form>
+
+<!-- Update the JavaScript for form submission -->
+<script>
+  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing Payment...';
+      
+      const formData = new FormData(this);
+      const paymentData = {
+        ...Object.fromEntries(formData),
+        amount: parseFloat(formData.get('manualAmount')),
+        paymentDate: new Date().toISOString()
+      };
+      
+      const response = await fetch('/customer/payments/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'CSRF-Token': formData.get('_csrf')
+        },
+        body: JSON.stringify(paymentData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Payment processed successfully!', 'success');
+        setTimeout(() => window.location.href = '/customer/payments?success=true', 1500);
+      } else {
+        throw new Error(data.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast(error.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+</script>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.payment-method-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-method-card:hover {
+  background-color: #f8f9fa;
+}
+
+.form-check-input:checked + .form-check-label {
+  font-weight: 500;
+}
+
+.payment-method-card .form-check-input:checked + .form-check-label {
+  color: #0d6efd;
+}
+
+.payment-details {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.input-group-text {
+  background-color: #f8f9fa;
+}
+</style>
+
+<script>
+  // Show/hide payment method specific fields
+  document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const method = this.value;
+      document.getElementById('upiFields').style.display = method === 'upi' ? 'block' : 'none';
+      document.getElementById('cardFields').style.display = method === 'card' ? 'block' : 'none';
+    });
+  });
+
+  // Handle form submission
+  document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing Payment...';
+      
+      const formData = new FormData(this);
+      const paymentData = Object.fromEntries(formData);
+
+      // Use manual amount instead of calculated amount
+      paymentData.totalAmount = parseFloat(paymentData.manualAmount);
+      paymentData.paymentDate = new Date().toISOString();
+      
+      const response = await fetch('/customer/payments/process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'CSRF-Token': formData.get('_csrf')
+        },
+        body: JSON.stringify(paymentData)
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Payment processed successfully!', 'success');
+        setTimeout(() => window.location.href = '/customer/payments?success=true', 1500);
+      } else {
+        throw new Error(data.message || 'Payment failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast(error.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalText;
+    }
+  });
+
+  function showToast(message, type) {
+    // Implement your toast notification logic here
+    alert(message); // Fallback if no toast implementation exists
+  }
+</script>
+
+<!-- Remove the footer include since it's already in the layout -->

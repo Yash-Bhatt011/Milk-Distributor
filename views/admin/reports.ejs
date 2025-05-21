@@ -1,0 +1,153 @@
+<div class="container">
+    <div class="stats-header my-4">
+        <h2>Business Reports</h2>
+        <p>Track distributor performance and payments</p>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" id="startDate" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">End Date</label>
+                    <input type="date" id="endDate" class="form-control">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button onclick="generateReport()" class="btn btn-primary">Generate Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Distributor Performance Summary -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Distributor Performance</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Distributor</th>
+                            <th>Active Customers</th>
+                            <th>Deliveries</th>
+                            <th>Success Rate</th>
+                            <th>Total Revenue</th>
+                            <th>Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody id="performanceTableBody">
+                        <% distributorStats.forEach(stat => { %>
+                        <tr>
+                            <td><%= stat.name %></td>
+                            <td><%= stat.activeCustomers %></td>
+                            <td><%= stat.deliveryCount %></td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: <%= typeof stat.successRate === 'number' ? stat.successRate : 0 %>%">
+                                        <%= typeof stat.successRate === 'number' ? stat.successRate : 0 %>%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>₹<%= stat.totalRevenue.toLocaleString() %></td>
+                            <td>₹<%= stat.outstandingAmount.toLocaleString() %></td>
+                        </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Summary -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Payment Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <h6 class="text-muted">Total Collections</h6>
+                        <h3 id="totalCollections">₹<%= summary.totalCollections.toLocaleString() %></h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <h6 class="text-muted">Outstanding Amount</h6>
+                        <h3 id="outstandingAmount">₹<%= summary.totalOutstanding.toLocaleString() %></h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <h6 class="text-muted">Average Collection</h6>
+                        <h3 id="averageCollection">₹<%= summary.averageCollection.toLocaleString() %></h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3">
+                        <h6 class="text-muted">Collection Rate</h6>
+                        <h3 id="collectionRate"><%= summary.collectionRate %>%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const REFRESH_INTERVAL = 60000; // 1 minute
+
+async function updatePaymentSummary() {
+    try {
+        const response = await fetch('/admin/payment-summary');
+        const summary = await response.json();
+        
+        // Update summary cards
+        document.querySelector('#totalCollections').textContent = 
+            `₹${summary.totalCollections.toLocaleString()}`;
+        document.querySelector('#outstandingAmount').textContent = 
+            `₹${summary.totalOutstanding.toLocaleString()}`;
+        document.querySelector('#averageCollection').textContent = 
+            `₹${summary.averageCollection.toLocaleString()}`;
+        document.querySelector('#collectionRate').textContent = 
+            `${summary.collectionRate}%`;
+            
+        showUpdateTime();
+    } catch (err) {
+        console.error('Error updating payment summary:', err);
+    }
+}
+
+// Update auto-refresh to include payment summary
+function autoRefreshData() {
+    generateReport();
+    updatePaymentSummary();
+}
+
+// Initial load
+document.addEventListener('DOMContentLoaded', () => {
+    updatePaymentSummary();
+    showUpdateTime();
+    setInterval(autoRefreshData, REFRESH_INTERVAL);
+});
+
+// Update the generateReport function
+async function generateReport() {
+    try {
+        // Your existing generateReport code here
+        
+        showUpdateTime();
+    } catch (err) {
+        console.error('Error generating report:', err);
+    }
+} // Make sure this closing brace is present
+
+// Make sure there's no extra closing brace here
+</script>

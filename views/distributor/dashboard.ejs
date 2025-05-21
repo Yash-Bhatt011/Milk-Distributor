@@ -1,0 +1,338 @@
+<div class="container-fluid px-4">
+  <!-- Dashboard Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h2 mb-1">Welcome, <%= user.name %>!</h1>
+      <p class="text-muted mb-0">Your distribution overview</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary btn-sm" onclick="window.location.reload()">
+        <i class="fas fa-sync"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="row g-4 mb-4">
+    <!-- Delivery Card -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase text-muted mb-2">Today's Deliveries</h6>
+              <h2 class="mb-0"><%= todaysDeliveries %></h2>
+            </div>
+            <div class="icon-shape bg-primary text-white rounded-circle p-3">
+              <i class="fas fa-truck fa-2x"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <a href="/distributor/deliveries" class="text-decoration-none small">
+              View deliveries <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customers Card -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase text-muted mb-2">Active Customers</h6>
+              <h2 class="mb-0"><%= activeCustomers %></h2>
+            </div>
+            <div class="icon-shape bg-success text-white rounded-circle p-3">
+              <i class="fas fa-users fa-2x"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <a href="/distributor/customers" class="text-decoration-none small">
+              Manage customers <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Revenue Card -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase text-muted mb-2">Monthly Revenue</h6>
+              <h2 class="mb-0">₹<%= monthlyRevenue.toFixed(2) %></h2>
+            </div>
+            <div class="icon-shape bg-info text-white rounded-circle p-3">
+              <i class="fas fa-rupee-sign fa-2x"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <a href="/distributor/revenue" class="text-decoration-none small">
+              View details <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Payments Card -->
+    <div class="col-xl-3 col-md-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="text-uppercase text-muted mb-2">Pending Payments</h6>
+              <h2 class="mb-0">₹<%= pendingPayments.toFixed(2) %></h2>
+            </div>
+            <div class="icon-shape bg-warning text-white rounded-circle p-3">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <a href="/distributor/payments" class="text-decoration-none small">
+              View payments <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="row g-4">
+    <!-- Deliveries Section -->
+    <div class="col-xl-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Deliveries</h5>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-secondary" onclick="window.location.reload()">
+                <i class="fas fa-sync"></i>
+              </button>
+              <a href="/distributor/deliveries" class="btn btn-sm btn-primary">
+                View All
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-4">Customer</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                  <th class="text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (recentDeliveries && recentDeliveries.length > 0) { %>
+                  <% recentDeliveries.forEach(delivery => { %>
+                    <tr class="align-middle">
+                      <td class="ps-4">
+                        <div class="d-flex align-items-center gap-3">
+                          <div class="avatar-circle bg-primary text-white">
+                            <%= delivery.customer.name.charAt(0).toUpperCase() %>
+                          </div>
+                          <div>
+                            <div class="fw-bold"><%= delivery.customer.name %></div>
+                            <div class="text-muted small"><%= delivery.customer.address.city %></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div class="text-nowrap">
+                          <%= new Date(delivery.scheduledDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) %>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge rounded-pill bg-<%= 
+                          delivery.status === 'delivered' ? 'success' : 
+                          delivery.status === 'pending' ? 'warning' : 
+                          'danger' %>">
+                          <%= delivery.status %>
+                        </span>
+                      </td>
+                      <td class="text-end pe-4">
+                        <div class="btn-group">
+                          <button class="btn btn-sm btn-outline-success" 
+                                  onclick="deliveryManager.updateStatus('<%= delivery._id %>', 'delivered')" 
+                                  <%= delivery.status === 'delivered' ? 'disabled' : '' %>>
+                            <i class="fas fa-check"></i>
+                          </button>
+                          <button class="btn btn-sm btn-outline-danger" 
+                                  onclick="deliveryManager.updateStatus('<%= delivery._id %>', 'failed')" 
+                                  <%= delivery.status === 'failed' ? 'disabled' : '' %>>
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }) %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">
+                      <i class="fas fa-truck-loading fa-2x mb-3"></i>
+                      <p class="mb-0">No deliveries scheduled</p>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payments Section -->
+    <div class="col-xl-4">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Payments</h5>
+            <a href="/distributor/payments" class="btn btn-sm btn-primary">
+              View All
+            </a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <% if (recentPayments && recentPayments.length > 0) { %>
+              <% recentPayments.forEach(payment => { %>
+                <div class="list-group-item border-0 py-3">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="fw-bold">₹<%= payment.amount.toFixed(2) %></div>
+                      <div class="small text-muted">
+                        <%= payment.customer?.name || 'Unknown Customer' %>
+                      </div>
+                    </div>
+                    <div class="text-end">
+                      <span class="badge bg-<%= 
+                        payment.status === 'completed' ? 'success' : 
+                        payment.status === 'pending' ? 'warning' : 
+                        'danger' %>">
+                        <%= payment.status %>
+                      </span>
+                      <div class="text-muted small mt-1">
+                        <i class="fas fa-<%= 
+                          payment.paymentMethod === 'cash' ? 'money-bill' : 
+                          payment.paymentMethod === 'upi' ? 'mobile' : 
+                          'credit-card' %>"></i>
+                        <%= payment.paymentMethod %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="text-center py-5 text-muted">
+                <i class="fas fa-wallet fa-2x mb-3"></i>
+                <p class="mb-0">No recent payments</p>
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.icon-shape {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.list-group-item {
+  transition: background-color 0.2s ease;
+}
+</style>
+
+<script>
+// Add toast notifications
+function showToast(type, message) {
+  const toast = document.createElement('div');
+  toast.className = `toast align-items-center text-white bg-${type} border-0`;
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">${message}</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+  
+  const toastContainer = document.querySelector('.toast-container') || createToastContainer();
+  toastContainer.appendChild(toast);
+  
+  new bootstrap.Toast(toast, { autohide: true, delay: 3000 }).show();
+}
+
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+  container.style.zIndex = '9999';
+  document.body.appendChild(container);
+  return container;
+}
+
+// Update delivery manager to use toast notifications
+const deliveryManager = {
+    csrfToken: document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
+    async updateStatus(id, status) {
+        try {
+            if (!confirm(`Are you sure you want to mark this delivery as ${status}?`)) return;
+
+            const response = await fetch(`/distributor/deliveries/${id}/status`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'CSRF-Token': this.csrfToken
+                },
+                body: JSON.stringify({ 
+                    status,
+                    notes: status === 'failed' ? prompt('Please enter reason for failure:') : ''
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to update status');
+            
+            showToast('success', `Delivery marked as ${status}`);
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            console.error('Error:', err);
+            showToast('danger', err.message || 'Error updating delivery status');
+        }
+    }
+};
+</script>

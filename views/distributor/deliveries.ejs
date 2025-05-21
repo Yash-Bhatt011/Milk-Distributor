@@ -1,0 +1,864 @@
+<div class="container py-4">
+  <!-- Header Section with Stats -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="fw-bold mb-0">Deliveries</h2>
+              <p class="text-muted mb-0">Manage your milk deliveries</p>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#createDeliveryModal">
+              <i class="fas fa-plus me-2"></i>Create Delivery
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delivery Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-box rounded-circle bg-primary-light me-3">
+              <i class="fas fa-truck text-primary"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Total Deliveries</h6>
+              <h3 class="mb-0"><%= deliveries ? deliveries.length : 0 %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-box rounded-circle bg-success-light me-3">
+              <i class="fas fa-check-circle text-success"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Completed</h6>
+              <h3 class="mb-0"><%= deliveries ? deliveries.filter(d => d.status === 'delivered').length : 0 %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-box rounded-circle bg-warning-light me-3">
+              <i class="fas fa-hourglass-half text-warning"></i>
+            </div>
+            <div>
+              <h6 class="text-muted mb-1">Pending</h6>
+              <h3 class="mb-0"><%= deliveries ? deliveries.filter(d => d.status === 'pending').length : 0 %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter and Search Bar -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="deliverySearch" class="form-control border-start-0" placeholder="Search customer name...">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select id="statusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="delivered">Delivered</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="timeFilter" class="form-select">
+                <option value="">All Times</option>
+                <option value="morning">Morning</option>
+                <option value="evening">Evening</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                <i class="fas fa-sync-alt me-1"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deliveries Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Today's Deliveries</h5>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="deliveryActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-v me-1"></i> Actions
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="deliveryActionsDropdown">
+                <li><a class="dropdown-item" href="#" id="printDeliveries"><i class="fas fa-print me-2"></i>Print List</a></li>
+                <li><a class="dropdown-item" href="#" id="exportDeliveries"><i class="fas fa-file-export me-2"></i>Export</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#" id="markAllDelivered"><i class="fas fa-check-double me-2"></i>Mark All Delivered</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <% if (deliveries && deliveries.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table align-middle table-hover" id="deliveriesTable">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="ps-4 py-3">Time</th>
+                    <th class="py-3">Customer</th>
+                    <th class="py-3">Product</th>
+                    <th class="py-3">Quantity</th>
+                    <th class="py-3">Status</th>
+                    <th class="py-3 text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% deliveries.forEach(delivery => { %>
+                    <tr class="delivery-row" 
+                        data-status="<%= delivery.status %>" 
+                        data-time="<%= delivery.deliveryTime || 'morning' %>"
+                        data-customer="<%= delivery.customer?.name || 'N/A' %>">
+                      <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                          <div class="icon-box rounded-circle bg-light me-3">
+                            <i class="fas fa-<%= (delivery.deliveryTime === 'morning' || new Date(delivery.scheduledTime).getHours() < 12) ? 'sun' : 'moon' %> text-<%= (delivery.deliveryTime === 'morning' || new Date(delivery.scheduledTime).getHours() < 12) ? 'warning' : 'primary' %>"></i>
+                          </div>
+                          <div>
+                            <span class="text-capitalize"><%= delivery.deliveryTime || (new Date(delivery.scheduledTime).getHours() < 12 ? 'morning' : 'evening') %></span>
+                            <div class="small text-muted"><%= new Date(delivery.scheduledTime).toLocaleTimeString() %></div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="fw-medium"><%= delivery.customer?.name || 'N/A' %></span>
+                      </td>
+                      <td>
+                        <% let productIcon;
+                          switch(delivery.order?.items[0]?.product || 'Regular Milk') {
+                            case 'Full Cream':
+                              productIcon = 'fill-drip';
+                              break;
+                            case 'Toned':
+                              productIcon = 'filter';
+                              break;
+                            case 'Double Toned':
+                              productIcon = 'tint-slash';
+                              break;
+                            default:
+                              productIcon = 'tint';
+                          }
+                        %>
+                        <div class="d-flex align-items-center">
+                          <i class="fas fa-<%= productIcon %> text-info me-2"></i>
+                          <span><%= delivery.order?.items[0]?.product || 'Regular Milk' %></span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="fw-medium"><%= delivery.order?.items[0]?.quantity || '0' %> L</span>
+                      </td>
+                      <td>
+                        <% 
+                          let statusClass, statusIcon;
+                          switch(delivery.status) {
+                            case 'delivered':
+                              statusClass = 'success';
+                              statusIcon = 'check-circle';
+                              break;
+                            case 'failed':
+                              statusClass = 'danger';
+                              statusIcon = 'times-circle';
+                              break;
+                            default:
+                              statusClass = 'warning';
+                              statusIcon = 'clock';
+                          }
+                        %>
+                        <span class="badge rounded-pill bg-<%= statusClass %>-light text-<%= statusClass %> px-3 py-2">
+                          <i class="fas fa-<%= statusIcon %> me-1"></i>
+                          <%= delivery.status %>
+                        </span>
+                      </td>
+                      <td class="text-end pe-4">
+                        <div class="btn-group">
+                          <% if (delivery.status !== 'delivered') { %>
+                            <button class="btn btn-sm btn-outline-success" onclick="updateDeliveryStatus('<%= delivery._id %>', 'delivered')">
+                              <i class="fas fa-check me-1"></i> Delivered
+                            </button>
+                          <% } %>
+                          <% if (delivery.status !== 'failed') { %>
+                            <button class="btn btn-sm btn-outline-danger" onclick="updateDeliveryStatus('<%= delivery._id %>', 'failed')">
+                              <i class="fas fa-times me-1"></i> Failed
+                            </button>
+                          <% } %>
+                          <% if (delivery.status === 'delivered' || delivery.status === 'failed') { %>
+                            <button class="btn btn-sm btn-outline-warning" onclick="updateDeliveryStatus('<%= delivery._id %>', 'pending')">
+                              <i class="fas fa-undo me-1"></i> Reset
+                            </button>
+                          <% } %>
+                          <button class="btn btn-sm btn-outline-info" onclick="viewOrderDetails('<%= delivery.order?._id %>')">
+                            <i class="fas fa-info-circle me-1"></i> Details
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="text-center py-5">
+              <div class="mb-3">
+                <i class="fas fa-truck text-muted" style="font-size: 3rem;"></i>
+              </div>
+              <h5 class="text-muted">No deliveries found</h5>
+              <p class="text-muted mb-4">Create your first delivery to get started</p>
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDeliveryModal">
+                <i class="fas fa-plus me-2"></i>Create Delivery
+              </button>
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Create Delivery Modal -->
+  <div class="modal fade" id="createDeliveryModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-truck me-2"></i>Create New Delivery
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <form id="createDeliveryForm">
+            <div class="modal-body p-4">
+              <!-- Customer Selection -->
+              <div class="mb-4">
+                <label class="form-label required">Customer</label>
+                <select name="customerId" class="form-select form-select-lg" required>
+                  <option value="">Choose customer...</option>
+                  <% customers.forEach(customer => { %>
+                    <option value="<%= customer._id %>"><%= customer.name %></option>
+                  <% }); %>
+                </select>
+              </div>
+              
+              <!-- Product Details -->
+              <div class="row mb-4">
+                <div class="col-md-6 mb-3 mb-md-0">
+                  <label class="form-label required">Milk Type</label>
+                  <select name="milkType" class="form-select" required>
+                    <option value="">Select type...</option>
+                    <option value="Regular Milk">Regular Milk</option>
+                    <option value="Full Cream Milk">Full Cream Milk</option>
+                    <option value="Toned Milk">Toned Milk</option>
+                    <option value="Double Toned Milk">Double Toned Milk</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label required">Quantity (Liters)</label>
+                  <div class="input-group">
+                    <input type="number" name="quantity" class="form-control" min="0.5" step="0.5" required>
+                    <span class="input-group-text">L</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Price Details -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <label class="form-label required">Price per Liter (₹)</label>
+                  <input type="number" name="pricePerLiter" class="form-control" value="60" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Total Amount (₹)</label>
+                  <input type="text" id="totalAmount" class="form-control" readonly>
+                </div>
+              </div>
+              
+              <!-- Delivery Details -->
+              <div class="mb-4">
+                <label class="form-label required">Delivery Date</label>
+                <input type="date" name="deliveryDate" class="form-control" required 
+                       value="<%= new Date().toISOString().split('T')[0] %>">
+              </div>
+              
+              <div class="mb-4">
+                <label class="form-label required">Delivery Time</label>
+                <div class="d-flex">
+                  <div class="form-check form-check-inline flex-fill">
+                    <input class="form-check-input" type="radio" name="deliveryTime" 
+                           id="morningDelivery" value="morning" required checked>
+                    <label class="form-check-label p-2 w-100 text-center border rounded" for="morningDelivery">
+                      <i class="fas fa-sun text-warning me-2"></i>Morning
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline flex-fill">
+                    <input class="form-check-input" type="radio" name="deliveryTime" 
+                           id="eveningDelivery" value="evening" required>
+                    <label class="form-check-label p-2 w-100 text-center border rounded" for="eveningDelivery">
+                      <i class="fas fa-moon text-primary me-2"></i>Evening
+                    </label>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Additional Options -->
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="true" id="notifyCustomer" name="notifyCustomer">
+                <label class="form-check-label" for="notifyCustomer">
+                  Notify customer about this delivery
+                </label>
+              </div>
+            </div>
+            <div class="modal-footer bg-light">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="fas fa-save me-2"></i>Create Delivery
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="orderDetailsModalLabel">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="orderDetails">
+          <!-- Order details will be dynamically added here -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.icon-box {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-primary-light {
+  background-color: rgba(13, 110, 253, 0.15);
+}
+
+.bg-success-light {
+  background-color: rgba(25, 135, 84, 0.15);
+}
+
+.bg-warning-light {
+  background-color: rgba(255, 193, 7, 0.15);
+}
+
+.bg-danger-light {
+  background-color: rgba(220, 53, 69, 0.15);
+}
+
+#deliveriesTable thead th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.modal-header {
+  border-bottom: 0;
+}
+
+.modal-footer {
+  border-top: 0;
+}
+
+/* Styling for the delivery time radio buttons */
+.form-check-inline {
+  margin-right: 10px;
+}
+
+.form-check-inline .form-check-input {
+  position: absolute;
+  opacity: 0;
+}
+
+.form-check-inline .form-check-label {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.form-check-inline .form-check-input:checked + .form-check-label {
+  background-color: rgba(13, 110, 253, 0.1);
+  border-color: #0d6efd;
+  font-weight: 500;
+}
+
+/* Custom Animation for Modals */
+.modal.fade .modal-dialog {
+  transform: scale(0.95);
+  transition: transform 0.2s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+</style>
+
+<style>
+/* Add to existing styles */
+.required::after {
+    content: '*';
+    color: red;
+    margin-left: 4px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    const createDeliveryForm = document.getElementById('createDeliveryForm');
+    
+    // Enhance form submission with loading state
+    createDeliveryForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = {
+            customer: formData.get('customerId'),
+            distributor: '<%= user._id %>',
+            items: [{
+                product: formData.get('milkType'),
+                quantity: parseFloat(formData.get('quantity')),
+                price: parseFloat(formData.get('pricePerLiter'))
+            }],
+            totalAmount: parseFloat(formData.get('quantity')) * parseFloat(formData.get('pricePerLiter')),
+            deliveryTime: formData.get('deliveryTime'),
+            deliveryDate: formData.get('deliveryDate'),
+            scheduledTime: new Date(formData.get('deliveryDate')).toISOString(),
+            status: 'pending',
+            paymentStatus: 'pending',
+            notifyCustomer: formData.get('notifyCustomer') === 'true',
+            order: {
+                customer: formData.get('customerId'),
+                distributor: '<%= user._id %>',
+                items: [{
+                    product: formData.get('milkType'),
+                    quantity: parseFloat(formData.get('quantity')),
+                    price: parseFloat(formData.get('pricePerLiter'))
+                }],
+                totalAmount: parseFloat(formData.get('quantity')) * parseFloat(formData.get('pricePerLiter')),
+                status: 'pending',
+                paymentStatus: 'pending',
+                deliveryTime: formData.get('deliveryTime'),
+                deliveryDate: formData.get('deliveryDate')
+            },
+            _csrf: csrfToken
+        };
+    
+        if (!data.customer || !data.items[0].product || !data.items[0].quantity || !data.deliveryTime || !data.deliveryDate) {
+            showToast('Please fill in all required fields', 'warning');
+            return;
+        }
+    
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        
+        try {
+            const response = await fetch('/distributor/deliveries/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'CSRF-Token': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+    
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to create delivery');
+            }
+    
+            // Close modal and show success message
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createDeliveryModal'));
+            modal.hide();
+            showToast('Delivery created successfully', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } catch (err) {
+            console.error('Error:', err);
+            showToast(err.message || 'Error creating delivery', 'danger');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Create Delivery';
+        }
+    });
+
+    // Add this code to calculate total amount automatically
+    document.querySelector('input[name="quantity"], input[name="pricePerLiter"]').addEventListener('input', function() {
+        const quantity = parseFloat(document.querySelector('input[name="quantity"]').value) || 0;
+        const pricePerLiter = parseFloat(document.querySelector('input[name="pricePerLiter"]').value) || 0;
+        document.getElementById('totalAmount').value = (quantity * pricePerLiter).toFixed(2);
+    });
+
+    // Update delivery status function
+    window.updateDeliveryStatus = async function(id, status) {
+        try {
+            const confirmed = await showConfirmation(`Are you sure you want to mark this delivery as ${status}?`);
+            if (!confirmed) return;
+
+            const notes = status === 'failed' ? prompt('Please enter reason for failure:') : '';
+
+            const response = await fetch(`/distributor/deliveries/${id}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'CSRF-Token': csrfToken
+                },
+                body: JSON.stringify({ status, notes })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update status');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                showToast(`Delivery marked as ${status}`, 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            showToast(err.message || 'Error updating delivery status', 'danger');
+        }
+    };
+
+    // View order details function
+    window.viewOrderDetails = async function(orderId) {
+        if (!orderId) {
+            showToast('Invalid order ID', 'warning');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/distributor/orders/${orderId}/details`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'CSRF-Token': csrfToken
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch order details');
+            }
+
+            const data = await response.json();
+            
+            if (!data || !data.order) {
+                throw new Error('Invalid order data received');
+            }
+
+            const order = data.order;
+            const delivery = data.delivery || order.delivery || {};
+            const customer = delivery.customer || order.customer || {};
+
+            document.getElementById('orderDetails').innerHTML = `
+                <div class="card border-0">
+                    <div class="card-body p-0">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">Order #${order._id ? order._id.slice(-6) : 'N/A'}</h6>
+                                    <span class="badge bg-${getStatusColor(order.status || delivery.status)}">${order.status || delivery.status || 'pending'}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Customer Name</label>
+                                <p class="mb-0">${customer.name || 'N/A'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Contact</label>
+                                <p class="mb-0">${customer.phone || 'N/A'}</p>
+                            </div>
+                            <div class="col-12">
+                                <label class="text-muted small">Address</label>
+                                <p class="mb-0">${formatAddress(customer.address)}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Product</label>
+                                <p class="mb-0">${order.items?.[0]?.product || 'Regular Milk'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Quantity</label>
+                                <p class="mb-0">${order.items?.[0]?.quantity || '0'} L</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Price per Liter</label>
+                                <p class="mb-0">₹${order.items?.[0]?.price?.toFixed(2) || '0.00'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Total Amount</label>
+                                <p class="mb-0">₹${((order.items?.[0]?.quantity || 0) * (order.items?.[0]?.price || 0)).toFixed(2)}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Delivery Time</label>
+                                <p class="mb-0 text-capitalize">${delivery.deliveryTime || order.deliveryTime || 'Not specified'}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted small">Scheduled For</label>
+                                <p class="mb-0">${delivery.scheduledTime ? new Date(delivery.scheduledTime).toLocaleString() : 'Not scheduled'}</p>
+                            </div>
+                            <div class="col-12">
+                                <label class="text-muted small">Notes</label>
+                                <p class="mb-0">${delivery.notes || order.notes || 'No notes'}</p>
+                            </div>
+                            ${(delivery.status === 'failed' || order.status === 'failed') ? `
+                                <div class="col-12">
+                                    <label class="text-muted small">Failure Reason</label>
+                                    <p class="mb-0 text-danger">${delivery.failureReason || order.failureReason || 'No reason provided'}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            modal.show();
+        } catch (err) {
+            console.error('Error:', err);
+            showToast(err.message || 'Error loading order details', 'danger');
+        }
+    };
+
+    // Helper functions
+    function getStatusColor(status) {
+        const colors = {
+            'delivered': 'success',
+            'pending': 'warning',
+            'failed': 'danger'
+        };
+        return colors[status] || 'secondary';
+    }
+
+    function formatAddress(address) {
+        if (!address) return 'No address available';
+        return `${address.street || ''}, ${address.city || ''}, ${address.state || ''} ${address.zipCode || ''}`.trim();
+    }
+
+    // Implement search and filter functionality
+    const searchInput = document.getElementById('deliverySearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const timeFilter = document.getElementById('timeFilter');
+    const resetFiltersBtn = document.getElementById('resetFilters');
+    
+    function filterDeliveries() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const timeValue = timeFilter.value;
+        
+        const rows = document.querySelectorAll('.delivery-row');
+        
+        rows.forEach(row => {
+            const customerName = row.getAttribute('data-customer').toLowerCase();
+            const status = row.getAttribute('data-status');
+            const time = row.getAttribute('data-time');
+            
+            const matchesSearch = !searchTerm || customerName.includes(searchTerm);
+            const matchesStatus = !statusValue || status === statusValue;
+            const matchesTime = !timeValue || time === timeValue;
+            
+            if (matchesSearch && matchesStatus && matchesTime) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Check if no visible rows after filtering
+        const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+        const tbody = document.querySelector('#deliveriesTable tbody');
+        
+        if (visibleRows.length === 0 && rows.length > 0) {
+            if (!document.getElementById('no-results-row')) {
+                const noResultsRow = document.createElement('tr');
+                noResultsRow.id = 'no-results-row';
+                noResultsRow.innerHTML = `
+                    <td colspan="6" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="fas fa-search text-muted mb-3" style="font-size: 2rem;"></i>
+                            <h5 class="text-muted">No matching deliveries found</h5>
+                            <button class="btn btn-outline-primary mt-2" id="clearFiltersBtn">
+                                <i class="fas fa-times me-1"></i>Clear filters
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noResultsRow);
+                
+                document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+                    resetFilters();
+                });
+            }
+        } else {
+            const noResultsRow = document.getElementById('no-results-row');
+            if (noResultsRow) {
+                noResultsRow.remove();
+            }
+        }
+    }
+    
+    function resetFilters() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        timeFilter.value = '';
+        filterDeliveries();
+    }
+    
+    if (searchInput && statusFilter && timeFilter) {
+        searchInput.addEventListener('input', filterDeliveries);
+        statusFilter.addEventListener('change', filterDeliveries);
+        timeFilter.addEventListener('change', filterDeliveries);
+        resetFiltersBtn.addEventListener('click', resetFilters);
+    }
+    
+    // Implement additional actions
+    document.getElementById('printDeliveries')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.print();
+    });
+    
+    document.getElementById('exportDeliveries')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        showToast('Export functionality will be available soon', 'info');
+    });
+    
+    document.getElementById('markAllDelivered')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        
+        const pendingDeliveries = document.querySelectorAll('.delivery-row[data-status="pending"]');
+        if (pendingDeliveries.length === 0) {
+            showToast('No pending deliveries to mark', 'info');
+            return;
+        }
+        
+        const confirmed = await showConfirmation(`Are you sure you want to mark all ${pendingDeliveries.length} pending deliveries as delivered?`);
+        if (!confirmed) return;
+        
+        showToast('This feature will be implemented soon', 'info');
+    });
+    
+    // Visual enhancements for milk type select
+    const milkTypeSelect = document.getElementById('milkTypeSelect');
+    if (milkTypeSelect) {
+        milkTypeSelect.addEventListener('change', function() {
+            // You could add additional logic here if needed
+        });
+    }
+    
+    // Helper functions
+    function showToast(message, type = 'success') {
+        // Check if the toast container exists
+        let toastContainer = document.getElementById('toast-container');
+        
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = '5000';
+            document.body.appendChild(toastContainer);
+        }
+        
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.id = toastId;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 3000
+        });
+        
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', function() {
+            toast.remove();
+        });
+    }
+    
+    function showConfirmation(message) {
+        return new Promise((resolve) => {
+            if (confirm(message)) {
+                resolve(true);
+            } else {
+                resolve(false);
+            }
+        });
+    }
+});
+</script>

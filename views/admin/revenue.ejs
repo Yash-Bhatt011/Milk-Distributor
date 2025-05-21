@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Details</title>
+    <meta name="csrf-token" content="<%= csrfToken %>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        .revenue-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        .stats-header {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-4">
+        <div class="stats-header">
+            <h2>Revenue Overview</h2>
+            <p>Track all payments and revenue details</p>
+        </div>
+
+        <div class="revenue-card p-4 mb-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Today's Revenue</h6>
+                        <h3 class="mb-0">₹<%= stats.todayRevenue.toLocaleString() %></h3>
+                        <small class="text-muted"><%= stats.todayCount %> payments today</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Monthly Revenue</h6>
+                        <h3 class="mb-0">₹<%= stats.monthlyRevenue.toLocaleString() %></h3>
+                        <small class="text-muted"><%= stats.monthlyCount %> payments this month</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Total Revenue</h6>
+                        <h3 class="mb-0">₹<%= stats.totalRevenue.toLocaleString() %></h3>
+                        <small class="text-muted"><%= stats.totalCount %> total payments</small>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-4 mt-2">
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Average Payment</h6>
+                        <h3 class="mb-0">₹<%= Math.round(stats.averagePayment).toLocaleString() %></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Highest Payment</h6>
+                        <h3 class="mb-0">₹<%= stats.highestPayment.toLocaleString() %></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded">
+                        <h6 class="text-muted">Lowest Payment</h6>
+                        <h3 class="mb-0">₹<%= stats.lowestPayment.toLocaleString() %></h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="revenue-card">
+            <div class="card-header bg-white p-4 border-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">Payment History</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-md-end">
+                            <input type="date" id="startDate" class="form-control" style="width: auto;">
+                            <input type="date" id="endDate" class="form-control" style="width: auto;">
+                            <button onclick="filterPayments()" class="btn btn-primary">Filter</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Distributor</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody">
+                            <% payments.forEach(payment => { %>
+                                <tr>
+                                    <td><%= new Date(payment.paymentDate).toLocaleDateString() %></td>
+                                    <td><%= payment.distributor?.name || 'N/A' %></td>
+                                    <td>₹<%= payment.amount %></td>
+                                    <td><%= payment.paymentMethod %></td>
+                                    <td>
+                                        <span class="badge bg-<%= payment.status === 'completed' ? 'success' : 'warning' %>">
+                                            <%= payment.status %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set initial dates from server-provided values
+            document.getElementById('startDate').value = '<%= startDate %>';
+            document.getElementById('endDate').value = '<%= endDate %>';
+        });
+
+        function filterPayments() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (!startDate || !endDate) {
+                alert('Please select both start and end dates');
+                return;
+            }
+
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Start date cannot be after end date');
+                return;
+            }
+
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('startDate', startDate);
+            currentUrl.searchParams.set('endDate', endDate);
+            
+            window.location.href = currentUrl.toString();
+        }
+
+        // Add event listeners for Enter key
+        document.getElementById('startDate').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') filterPayments();
+        });
+        
+        document.getElementById('endDate').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') filterPayments();
+        });
+    </script>
+</body>
+</html>

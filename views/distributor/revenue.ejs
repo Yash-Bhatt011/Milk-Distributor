@@ -1,0 +1,397 @@
+<div class="container-fluid px-4 py-4">
+  <!-- Revenue Summary Cards -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-shape bg-primary text-white rounded-circle p-3 me-3">
+              <i class="fas fa-coins fa-2x"></i>
+            </div>
+            <div>
+              <h6 class="text-uppercase text-muted mb-1">Today's Collection</h6>
+              <h3 class="mb-0">₹<%= todayRevenue.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-shape bg-success text-white rounded-circle p-3 me-3">
+              <i class="fas fa-chart-line fa-2x"></i>
+            </div>
+            <div>
+              <h6 class="text-uppercase text-muted mb-1">This Month</h6>
+              <h3 class="mb-0">₹<%= monthlyRevenue.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-shape bg-info text-white rounded-circle p-3 me-3">
+              <i class="fas fa-wallet fa-2x"></i>
+            </div>
+            <div>
+              <h6 class="text-uppercase text-muted mb-1">Total Revenue</h6>
+              <h3 class="mb-0">₹<%= totalRevenue.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+      <div class="card border-0 shadow-sm hover-shadow">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="icon-shape bg-warning text-white rounded-circle p-3 me-3">
+              <i class="fas fa-clock fa-2x"></i>
+            </div>
+            <div>
+              <h6 class="text-uppercase text-muted mb-1">Pending Amount</h6>
+              <h3 class="mb-0">₹<%= pendingAmount.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Revenue Chart -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Revenue Trends</h5>
+        <div class="d-flex gap-2 align-items-center">
+          <input type="date" id="chartStartDate" class="form-control form-control-sm">
+          <input type="date" id="chartEndDate" class="form-control form-control-sm">
+          <button onclick="updateChart()" class="btn btn-sm btn-primary">
+            <i class="fas fa-sync me-1"></i>Update
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body position-relative" style="min-height: 400px">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Payments Table -->
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Payment History</h5>
+        <div class="d-flex gap-2">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+            <input type="date" id="startDate" class="form-control">
+          </div>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="fas fa-calendar"></i></span>
+            <input type="date" id="endDate" class="form-control">
+          </div>
+          <button onclick="filterRevenue()" class="btn btn-sm btn-primary">
+            <i class="fas fa-filter me-1"></i>Filter
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="bg-light">
+            <tr>
+              <th class="ps-4">Date</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Payment Method</th>
+              <th>Status</th>
+              <th class="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (payments.length > 0) { %>
+              <% payments.forEach(payment => { %>
+                <tr class="hover-highlight">
+                  <td class="ps-4"><%= new Date(payment.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) %></td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <div class="avatar-circle bg-primary text-white">
+                        <%= payment.customer?.name?.charAt(0).toUpperCase() || 'N/A' %>
+                      </div>
+                      <%= payment.customer?.name || 'N/A' %>
+                    </div>
+                  </td>
+                  <td>₹<%= payment.amount.toLocaleString('en-IN', {minimumFractionDigits: 2}) %></td>
+                  <td>
+                    <span class="badge bg-<%= payment.paymentMethod === 'cash' ? 'success' : payment.paymentMethod === 'upi' ? 'primary' : 'info' %>">
+                      <i class="fas fa-<%= payment.paymentMethod === 'cash' ? 'money-bill' : payment.paymentMethod === 'upi' ? 'mobile' : 'credit-card' %> me-1"></i>
+                      <%= payment.paymentMethod %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge rounded-pill bg-<%= payment.status === 'completed' ? 'success' : 'warning' %>">
+                      <%= payment.status %>
+                    </span>
+                  </td>
+                  <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-light rounded-pill" 
+                            onclick="viewPaymentDetails('<%= payment._id %>')"
+                            data-bs-toggle="tooltip" 
+                            title="View Details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="6" class="text-center py-5 text-muted">
+                  <i class="fas fa-coins fa-2x mb-3"></i>
+                  <p class="mb-0">No transactions found</p>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Details Modal -->
+<div class="modal fade" id="paymentDetailsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title d-flex align-items-center gap-2">
+          <i class="fas fa-receipt text-primary"></i>
+          Payment Receipt
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="text-muted small mb-1">Customer Name</label>
+            <p class="fw-bold mb-0" id="customerName"></p>
+            <p class="text-muted small mb-0" id="customerPhone"></p>
+          </div>
+          <div class="col-6 text-end">
+            <label class="text-muted small mb-1">Total Amount</label>
+            <h4 class="text-success mb-0" id="paymentAmount"></h4>
+          </div>
+          <div class="col-12"><hr class="my-3"></div>
+          <div class="col-6">
+            <label class="text-muted small mb-1">Payment Date</label>
+            <p class="mb-0" id="paymentDate"></p>
+          </div>
+          <div class="col-6">
+            <label class="text-muted small mb-1">Payment Method</label>
+            <p class="mb-0" id="paymentMethod"></p>
+          </div>
+          <div class="col-6">
+            <label class="text-muted small mb-1">Milk Quantity</label>
+            <p class="mb-0" id="milkQuantity"></p>
+          </div>
+          <div class="col-6">
+            <label class="text-muted small mb-1">Rate per Liter</label>
+            <p class="mb-0" id="ratePerLiter"></p>
+          </div>
+          <div class="col-12">
+            <label class="text-muted small mb-1">Payment Status</label>
+            <p class="mb-0" id="paymentStatus"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let revenueChart;
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeDates();
+  initializeChart();
+  // Enable tooltips
+  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+});
+
+function initializeDates() {
+  const today = new Date();
+  const monthAgo = new Date();
+  monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+  // Set default dates for both filters
+  document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
+  document.getElementById('endDate').value = today.toISOString().split('T')[0];
+  document.getElementById('chartStartDate').value = monthAgo.toISOString().split('T')[0];
+  document.getElementById('chartEndDate').value = today.toISOString().split('T')[0];
+}
+
+function initializeChart() {
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: <%- JSON.stringify(revenueData && revenueData.labels ? revenueData.labels : []) %>,
+      datasets: [{
+        label: 'Daily Revenue',
+        data: <%- JSON.stringify(revenueData && revenueData.values ? revenueData.values : []) %>,
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (context) => '₹' + context.parsed.y.toLocaleString('en-IN', {minimumFractionDigits: 2})
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: (value) => '₹' + value.toLocaleString('en-IN')
+          }
+        }
+      }
+    }
+  });
+}
+
+async function updateChart() {
+  const start = document.getElementById('chartStartDate').value;
+  const end = document.getElementById('chartEndDate').value;
+  if (!start || !end) return showToast('Please select date range', 'warning');
+  if (new Date(end) < new Date(start)) return showToast('Invalid date range', 'danger');
+
+  try {
+    const response = await fetch(`/distributor/revenue/data?startDate=${start}&endDate=${end}`);
+    const data = await response.json();
+    if (data.success) {
+      revenueChart.data.labels = data.data.map(d => d._id);
+      revenueChart.data.datasets[0].data = data.data.map(d => d.total);
+      revenueChart.update();
+      showToast('Chart updated successfully', 'success');
+    } else {
+      showToast('No data found for selected range', 'warning');
+    }
+  } catch (error) {
+    console.error('Chart error:', error);
+    showToast('Error updating chart', 'danger');
+  }
+}
+
+function filterRevenue() {
+  const startDate = document.getElementById('startDate').value;
+  const endDate = document.getElementById('endDate').value;
+  if (!startDate || !endDate) {
+    showToast('Please select both dates', 'warning');
+    return;
+  }
+  if (new Date(endDate) < new Date(startDate)) {
+    showToast('End date cannot be earlier than start date', 'danger');
+    return;
+  }
+  window.location.href = `/distributor/revenue?startDate=${startDate}&endDate=${endDate}`;
+}
+
+function viewPaymentDetails(paymentId) {
+  fetch(`/distributor/payments/${paymentId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.payment) {
+        const payment = data.payment;
+        document.getElementById('customerName').textContent = payment.customerName;
+        document.getElementById('customerPhone').textContent = payment.customerPhone;
+        document.getElementById('paymentAmount').textContent = payment.amount;
+        document.getElementById('paymentDate').textContent = payment.date;
+        document.getElementById('paymentMethod').innerHTML = `
+          <i class="fas fa-${getPaymentIcon(payment.paymentMethod)} me-2"></i>
+          ${payment.paymentMethod}`;
+        document.getElementById('milkQuantity').textContent = `${payment.milkQuantity} L`;
+        document.getElementById('ratePerLiter').textContent = payment.ratePerLiter;
+        document.getElementById('paymentStatus').innerHTML = `
+          <span class="badge bg-${getStatusClass(payment.status)}">${payment.status}</span>`;
+        const modal = new bootstrap.Modal(document.getElementById('paymentDetailsModal'));
+        modal.show();
+      } else {
+        showToast('Error loading payment details', 'danger');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showToast('Error loading payment details', 'danger');
+    });
+}
+
+function getPaymentIcon(method) {
+  switch(method.toLowerCase()) {
+    case 'cash': return 'money-bill';
+    case 'upi': return 'mobile';
+    case 'card': return 'credit-card';
+    default: return 'money-bill';
+  }
+}
+
+function getStatusClass(status) {
+  switch(status.toLowerCase()) {
+    case 'completed': return 'success';
+    case 'pending': return 'warning';
+    case 'confirmed': return 'info';
+    default: return 'secondary';
+  }
+}
+
+function showToast(message, type = 'info') {
+  // Simple toast notification
+  alert(message);
+}
+</script>
+
+<style>
+.hover-shadow {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-shadow:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+.icon-shape {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hover-highlight:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+</style>

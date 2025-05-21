@@ -1,0 +1,202 @@
+/* Global styles for MilkMaster Distribution System */
+
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --info-color: #0dcaf0;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* Card customization */
+.card {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.card-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+}
+
+/* Dashboard cards */
+.dashboard-card {
+  height: 100%;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.dashboard-icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Status badges */
+.status-badge {
+  padding: 0.35em 0.65em;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-confirmed {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-delivered {
+  background-color: #cff4fc;
+  color: #055160;
+}
+
+.status-canceled {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+/* Custom buttons */
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+}
+
+/* Tables */
+.table-responsive {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Forms */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Animation for fade in elements */
+.fade-in {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.8rem;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
+  h3 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Custom styles for role cards */
+.role-card {
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.role-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Notification bell icon */
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  border-radius: 50%;
+  background-color: var(--danger-color);
+  color: white;
+  transform: translate(25%, -25%);
+}
+
+/* Custom table styles */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Custom navbar adjustments */
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+/* Custom footer styles */
+footer {
+  margin-top: auto;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  body {
+    background-color: white;
+    font-size: 12pt;
+  }
+  
+  main {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}

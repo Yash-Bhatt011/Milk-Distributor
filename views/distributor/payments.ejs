@@ -1,0 +1,567 @@
+<div class="container py-4">
+  <!-- Header Section with Stats -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 class="fw-bold mb-0">Payment Management</h2>
+              <p class="text-muted mb-0">Track and manage customer payments</p>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#recordPaymentModal">
+              <i class="fas fa-plus me-2"></i>Record Payment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter and Search Bar -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="input-group">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" id="paymentSearch" class="form-control border-start-0" placeholder="Search payments...">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <select id="statusFilter" class="form-select">
+                <option value="">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <select id="methodFilter" class="form-select">
+                <option value="">All Payment Methods</option>
+                <option value="cash">Cash</option>
+                <option value="upi">UPI</option>
+                <option value="online">Online Transfer</option>
+                <option value="card">Card</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button class="btn btn-outline-secondary w-100" id="resetFilters">
+                <i class="fas fa-sync-alt me-1"></i> Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payments Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table align-middle table-hover" id="paymentsTable">
+              <thead class="bg-light">
+                <tr>
+                  <th class="ps-4 py-3">Date</th>
+                  <th class="py-3">Customer</th>
+                  <th class="py-3">Amount</th>
+                  <th class="py-3">Method</th>
+                  <th class="py-3">Status</th>
+                  <th class="py-3 text-end pe-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (payments && payments.length > 0) { %>
+                  <% payments.forEach(payment => { %>
+                    <tr class="payment-row" 
+                        data-status="<%= payment.status %>" 
+                        data-method="<%= payment.paymentMethod %>"
+                        data-customer="<%= payment.customer?.name || 'N/A' %>">
+                      <td class="ps-4">
+                        <div class="d-flex align-items-center">
+                          <div class="icon-box rounded-circle bg-light me-3">
+                            <i class="fas fa-calendar-day text-primary"></i>
+                          </div>
+                          <span><%= new Date(payment.paymentDate).toLocaleDateString() %></span>
+                        </div>
+                      </td>
+                      <td><%= payment.customer?.name || 'N/A' %></td>
+                      <td>
+                        <span class="fw-bold">₹<%= payment.amount.toFixed(2) %></span>
+                      </td>
+                      <td>
+                        <% let methodIcon, methodClass;
+                          switch(payment.paymentMethod) {
+                            case 'cash':
+                              methodIcon = 'money-bill-wave';
+                              methodClass = 'text-success';
+                              break;
+                            case 'upi':
+                              methodIcon = 'mobile-alt';
+                              methodClass = 'text-info';
+                              break;
+                            case 'online':
+                              methodIcon = 'university';
+                              methodClass = 'text-primary';
+                              break;
+                            case 'card':
+                              methodIcon = 'credit-card';
+                              methodClass = 'text-warning';
+                              break;
+                            default:
+                              methodIcon = 'money-check';
+                              methodClass = 'text-secondary';
+                          }
+                        %>
+                        <div class="d-flex align-items-center">
+                          <i class="fas fa-<%= methodIcon %> <%= methodClass %> me-2"></i>
+                          <span class="text-capitalize"><%= payment.paymentMethod %></span>
+                        </div>
+                      </td>
+                      <td>
+                        <span class="badge rounded-pill bg-<%= payment.status === 'confirmed' ? 'success' : 'warning' %> px-3 py-2">
+                          <i class="fas fa-<%= payment.status === 'confirmed' ? 'check-circle' : 'clock' %> me-1"></i>
+                          <%= payment.status %>
+                        </span>
+                      </td>
+                      <td class="text-end pe-4">
+                        <div class="btn-group">
+                          <button class="btn btn-sm btn-outline-primary" onclick="viewPaymentDetails('<%= payment._id %>')">
+                            <i class="fas fa-eye me-1"></i> View
+                          </button>
+                          <button class="btn btn-sm <%= payment.status === 'confirmed' ? 'btn-outline-warning' : 'btn-outline-success' %>" 
+                                  onclick="togglePaymentStatus('<%= payment._id %>', '<%= payment.status %>')">
+                            <i class="fas fa-<%= payment.status === 'confirmed' ? 'undo' : 'check' %> me-1"></i>
+                            <%= payment.status === 'confirmed' ? 'Mark Pending' : 'Confirm' %>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="6" class="text-center py-5">
+                      <div class="d-flex flex-column align-items-center">
+                        <i class="fas fa-coins text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No payments found</h5>
+                        <p class="text-muted">Record your first payment to get started</p>
+                      </div>
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stylish Record Payment Modal -->
+  <div class="modal fade" id="recordPaymentModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-money-check-alt me-2"></i>Record New Payment
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <form action="/distributor/payments/record" method="POST" id="recordPaymentForm">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="modal-body p-4">
+            <div class="mb-4">
+              <label class="form-label">Select Customer</label>
+              <select name="customerId" class="form-select form-select-lg" required>
+                <option value="">Choose customer...</option>
+                <% customers.forEach(customer => { %>
+                  <option value="<%= customer._id %>">
+                    <%= customer.name %> <% if (customer.pendingAmount) { %><span class="text-danger">(Pending: ₹<%= customer.pendingAmount %>)</span><% } %>
+                  </option>
+                <% }); %>
+              </select>
+            </div>
+            
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Amount (₹)</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" name="amount" class="form-control form-control-lg" required min="1" step="0.01">
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <label class="form-label">Payment Method</label>
+                <select name="paymentMethod" class="form-select form-select-lg" required>
+                  <option value="cash">Cash</option>
+                  <option value="upi">UPI</option>
+                  <option value="online">Online Transfer</option>
+                  <option value="card">Card</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label class="form-label">Notes (Optional)</label>
+              <textarea name="notes" class="form-control" rows="3" placeholder="Enter any additional information..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer bg-light">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary px-4">
+              <i class="fas fa-save me-2"></i>Record Payment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Improved Payment Details Modal -->
+  <div class="modal fade" id="viewPaymentModal">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">
+            <i class="fas fa-info-circle me-2"></i>Payment Details
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="paymentDetailsContent">
+          <!-- Content will be dynamically populated -->
+          <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.icon-box {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#paymentsTable thead th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.modal-header {
+  border-bottom: 0;
+}
+
+.modal-footer {
+  border-top: 0;
+}
+
+/* Custom Animation for Modals */
+.modal.fade .modal-dialog {
+  transform: scale(0.95);
+  transition: transform 0.2s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+</style>
+
+<script>
+// Original functions with improved implementation
+async function viewPaymentDetails(paymentId) {
+    document.getElementById('paymentDetailsContent').innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    `;
+    
+    // Show modal first so user sees the loading spinner
+    new bootstrap.Modal(document.getElementById('viewPaymentModal')).show();
+    
+    try {
+        const response = await fetch(`/distributor/payments/${paymentId}`, {
+            headers: {
+                'CSRF-Token': '<%= csrfToken %>'
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch payment details');
+        const payment = await response.json();
+        
+        if (!payment.success) {
+            throw new Error(payment.message || 'Failed to load payment details');
+        }
+        
+        let methodIcon, methodClass;
+        switch(payment.data.paymentMethod) {
+          case 'cash':
+            methodIcon = 'money-bill-wave';
+            methodClass = 'text-success';
+            break;
+          case 'upi':
+            methodIcon = 'mobile-alt';
+            methodClass = 'text-info';
+            break;
+          case 'online':
+            methodIcon = 'university';
+            methodClass = 'text-primary';
+            break;
+          case 'card':
+            methodIcon = 'credit-card';
+            methodClass = 'text-warning';
+            break;
+          default:
+            methodIcon = 'money-check';
+            methodClass = 'text-secondary';
+        }
+        
+        const detailsHTML = `
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <div class="display-5 fw-bold text-primary mb-2">₹${payment.data.formattedAmount}</div>
+                    <div class="text-muted mb-2">${payment.data.milkQuantityDisplay}</div>
+                    <div class="badge rounded-pill bg-${payment.data.status === 'confirmed' ? 'success' : 'warning'} px-3 py-2 mb-2">
+                        <i class="fas fa-${payment.data.status === 'confirmed' ? 'check-circle' : 'clock'} me-1"></i>
+                        ${payment.data.status}
+                    </div>
+                    <p class="text-muted mb-0">${payment.data.formattedDate}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center mb-3">
+                <div class="icon-box rounded-circle bg-light me-3">
+                    <i class="fas fa-user text-primary"></i>
+                </div>
+                <div>
+                    <p class="text-muted mb-0">Customer</p>
+                    <h6 class="mb-0">${payment.data.customerInfo?.name || 'N/A'}</h6>
+                    <small class="text-muted">${payment.data.customerInfo?.phone || ''}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex align-items-center mb-3">
+                <div class="icon-box rounded-circle bg-light me-3">
+                    <i class="fas fa-${methodIcon} ${methodClass}"></i>
+                </div>
+                <div>
+                    <p class="text-muted mb-0">Method</p>
+                    <h6 class="mb-0 text-capitalize">${payment.data.paymentMethod || 'N/A'}</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    ${payment.data.notes ? `
+        <div class="card bg-light mb-0">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-sticky-note me-2 text-muted"></i>Notes
+                </h6>
+                <p class="card-text mb-0">${payment.data.notes}</p>
+            </div>
+        </div>
+    ` : ''}
+`;
+        
+        document.getElementById('paymentDetailsContent').innerHTML = detailsHTML;
+    } catch (err) {
+        console.error('Error:', err);
+        document.getElementById('paymentDetailsContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                Error loading payment details: ${err.message || 'Unknown error'}
+            </div>
+        `;
+    }
+}
+
+document.getElementById('recordPaymentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    try {
+        const formData = new FormData(this);
+        const data = {
+            customerId: formData.get('customerId'),
+            amount: parseFloat(formData.get('amount')),
+            paymentMethod: formData.get('paymentMethod'),
+            notes: formData.get('notes'),
+            ratePerLiter: 60, // Default rate
+            milkQuantity: parseFloat((parseFloat(formData.get('amount')) / 60).toFixed(2)) // Calculate quantity
+        };
+
+        const response = await fetch('/distributor/payments/record', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': formData.get('_csrf')
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to record payment');
+        }
+
+        window.location.reload();
+    } catch (err) {
+        console.error('Error:', err);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        
+        const alertElement = document.createElement('div');
+        alertElement.className = 'alert alert-danger alert-dismissible fade show mt-3';
+        alertElement.innerHTML = `
+            <i class="fas fa-exclamation-circle me-2"></i>
+            ${err.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const modalBody = this.querySelector('.modal-body');
+        modalBody.insertBefore(alertElement, modalBody.firstChild);
+    }
+});
+
+async function togglePaymentStatus(paymentId, currentStatus) {
+  const newStatus = currentStatus === 'confirmed' ? 'pending' : 'confirmed';
+  const actionText = currentStatus === 'confirmed' ? 'mark as pending' : 'confirm';
+  
+  if (!confirm(`Are you sure you want to ${actionText} this payment?`)) return;
+  
+  try {
+    const response = await fetch(`/distributor/payments/${paymentId}/toggle-status`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'CSRF-Token': document.querySelector('input[name="_csrf"]').value
+      },
+      body: JSON.stringify({
+        status: newStatus
+      })
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    window.location.reload();
+  } catch (err) {
+    console.error('Error:', err);
+    alert(err.message || 'Error updating payment status');
+  }
+}
+
+// New functionality: Search and filtering
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('paymentSearch');
+  const statusFilter = document.getElementById('statusFilter');
+  const methodFilter = document.getElementById('methodFilter');
+  const resetFiltersBtn = document.getElementById('resetFilters');
+  
+  function filterPayments() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusValue = statusFilter.value;
+    const methodValue = methodFilter.value;
+    
+    const rows = document.querySelectorAll('.payment-row');
+    
+    rows.forEach(row => {
+      const customerName = row.getAttribute('data-customer').toLowerCase();
+      const status = row.getAttribute('data-status');
+      const method = row.getAttribute('data-method');
+      
+      const matchesSearch = !searchTerm || customerName.includes(searchTerm);
+      const matchesStatus = !statusValue || status === statusValue;
+      const matchesMethod = !methodValue || method === methodValue;
+      
+      if (matchesSearch && matchesStatus && matchesMethod) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+    
+    // Check if no visible rows after filtering
+    const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+    const tbody = document.querySelector('#paymentsTable tbody');
+    
+    if (visibleRows.length === 0 && rows.length > 0) {
+      if (!document.getElementById('no-results-row')) {
+        const noResultsRow = document.createElement('tr');
+        noResultsRow.id = 'no-results-row';
+        noResultsRow.innerHTML = `
+          <td colspan="6" class="text-center py-5">
+            <div class="d-flex flex-column align-items-center">
+              <i class="fas fa-search text-muted mb-3" style="font-size: 2rem;"></i>
+              <h5 class="text-muted">No matching payments found</h5>
+              <button class="btn btn-outline-primary mt-2" id="clearFiltersBtn">
+                <i class="fas fa-times me-1"></i>Clear filters
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(noResultsRow);
+        
+        document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+          resetFilters();
+        });
+      }
+    } else {
+      const noResultsRow = document.getElementById('no-results-row');
+      if (noResultsRow) {
+        noResultsRow.remove();
+      }
+    }
+  }
+  
+  function resetFilters() {
+    searchInput.value = '';
+    statusFilter.value = '';
+    methodFilter.value = '';
+    filterPayments();
+  }
+  
+  if (searchInput && statusFilter && methodFilter) {
+    searchInput.addEventListener('input', filterPayments);
+    statusFilter.addEventListener('change', filterPayments);
+    methodFilter.addEventListener('change', filterPayments);
+    resetFiltersBtn.addEventListener('click', resetFilters);
+  }
+});
+</script>
