@@ -91,6 +91,75 @@ exports.updateProfile = async (req, res) => {
     res.redirect('/customer/profile');
   }
 };
+exports.updateCustomer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    console.log("Attempting to update customer with ID:", id);
+    console.log("Request body:", JSON.stringify(updateData));
+    console.log("Request params:", req.params);
+    console.log("Request route:", req.originalUrl);
+    console.log("User making request:", req.user ? req.user._id : 'Not authenticated');
+    
+    // If using MongoDB, ensure valid ObjectId
+    const mongoose = require('mongoose');
+    let customerId;
+    
+    try {
+      customerId = mongoose.Types.ObjectId(id);
+    } catch (err) {
+      console.log("Invalid customer ID format:", id);
+      return res.status(400).json({ message: "Invalid customer ID format" });
+    }
+    
+    // Check if the customer exists and belongs to the distributor
+    const customer = await User.findOne({ 
+      _id: customerId,
+      role: 'customer',
+      'customerFields.distributorId': req.user._id  // Ensure customer belongs to this distributor
+    });
+    
+    console.log("Find result:", customer);
+    
+    if (!customer) {
+      console.log("Customer not found with ID:", id, "or doesn't belong to distributor:", req.user._id);
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    
+    // Update only allowed fields
+    const allowedUpdates = {
+      name: updateData.name,
+      phone: updateData.phone,
+      email: updateData.email,
+      address: updateData.address,
+      'customerFields.subscriptionPlan': updateData.subscriptionPlan,
+      'customerFields.milkQuantity': updateData.milkQuantity,
+      'customerFields.deliveryTime': updateData.deliveryTime,
+      'customerFields.deliveryInstructions': updateData.deliveryInstructions,
+      'customerFields.active': updateData.active
+    };
+    
+    // Remove undefined fields
+    Object.keys(allowedUpdates).forEach(key => 
+      allowedUpdates[key] === undefined && delete allowedUpdates[key]
+    );
+    
+    // Update customer
+    const updatedCustomer = await User.findByIdAndUpdate(
+      customerId, 
+      allowedUpdates, 
+      { new: true, runValidators: true }
+    );
+    
+    console.log("Customer updated successfully:", updatedCustomer);
+    res.status(200).json(updatedCustomer);
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    console.error("Error stack:", error.stack);
+    res.status(500).json({ message: "Error updating customer", error: error.message });
+  }
+}
 
 exports.getOrders = async (req, res) => {
   try {

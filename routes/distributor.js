@@ -173,10 +173,11 @@ router.post('/customers/:id/edit', async (req, res) => {
       city, state, zipCode 
     } = req.body;
 
+    // The issue is here - you're using 'distributor' instead of 'customerFields.distributorId'
     const customer = await User.findOneAndUpdate(
       {
         _id: req.params.id,
-        distributor: req.user._id
+        'customerFields.distributorId': req.user._id  // Changed from distributor: req.user._id
       },
       {
         $set: {
